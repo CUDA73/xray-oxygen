@@ -222,15 +222,13 @@ public:
 #endif
 
 	// API
-	IC	void						set_xform			(u32 ID, const Fmatrix& M_);
-	IC	void						set_xform_world		(const Fmatrix& M);
-	IC void set_xform_world(const Matrix4x4 & fM);
-	IC	void						set_xform_view		(const Fmatrix& M);
-	IC	void						set_xform_project	(const Fmatrix& M);
-	IC	void						set_xform_project	(const Matrix4x4& M) { set_xform_project(CastToGSCMatrix(M)); }
-	IC	const Fmatrix&				get_xform_world		();
-	IC	const Fmatrix&				get_xform_view		();
-	IC	const Fmatrix&				get_xform_project	();
+	IC	void						set_xform			(u32 ID, const Matrix4x4& M_);
+	IC	void						set_xform_world		(const Matrix4x4& M);
+	IC	void						set_xform_view		(const Matrix4x4& M);
+	IC	void						set_xform_project	(const Matrix4x4& M);
+	IC	const Matrix4x4&			get_xform_world		();
+	IC	const Matrix4x4&			get_xform_view		();
+	IC	const Matrix4x4&			get_xform_project	();
 
 	IC	void						set_RT				(ID3DRenderTargetView* RT, u32 ID=0);
 	IC	void						set_ZB				(ID3DDepthStencilView* ZB);
@@ -308,7 +306,7 @@ public:
 	IC  void						set_CullMode		(u32 _mode);
 	IC  u32							get_CullMode		(){return cull_mode;}
 	void							set_ClipPlanes		(u32 _enable, Fplane*	_planes=NULL, u32 count=0);
-	void							set_ClipPlanes		(u32 _enable, Fmatrix*	_xform =NULL, u32 fmask=0xff);
+	void							set_ClipPlanes		(u32 _enable, Matrix4x4*	_xform =NULL, u32 fmask=0xff);
 	IC	void						set_Scissor			(Irect*	rect=NULL);
 
 	// constants
@@ -316,10 +314,10 @@ public:
 	ICF	ref_constant				get_c				(shared_str&	n)													{ if (ctable)	return ctable->get(n);else return 0;}
 
 	// constants - direct (fast)
-	ICF	void						set_c				(R_constant* pC, const Fmatrix& A)									{ if (pC)		constants.set(pC,A);				}
+	ICF	void						set_c				(R_constant* pC, const Matrix4x4& A)									{ if (pC)		constants.set(pC,A);				}
 	ICF	void						set_c				(R_constant* pC, const Fvector4& A)									{ if (pC)		constants.set(pC,A);				}
 	ICF	void						set_c				(R_constant* pC, float x, float y, float z, float w)				{ if (pC)		constants.set(pC,x,y,z,w);			}
-	ICF	void						set_ca				(R_constant* pC, u32 e, const Fmatrix& A)							{ if (pC)		constants.seta(pC,e,A);				}
+	ICF	void						set_ca				(R_constant* pC, u32 e, const Matrix4x4& A)							{ if (pC)		constants.seta(pC,e,A);				}
 	ICF	void						set_ca				(R_constant* pC, u32 e, const Fvector4& A)							{ if (pC)		constants.seta(pC,e,A);				}
 	ICF	void						set_ca				(R_constant* pC, u32 e, float x, float y, float z, float w)			{ if (pC)		constants.seta(pC,e,x,y,z,w);		}
 #ifdef USE_DX11
@@ -329,11 +327,10 @@ public:
 
 
 	// constants - LPCSTR (slow)
-	ICF	void						set_c				(LPCSTR n, const Fmatrix& A)										{ if(ctable)	set_c	(&*ctable->get(n),A);		}
-	ICF	void						set_c				(LPCSTR n, const Matrix4x4& A)								{ if(ctable)	set_c	(&*ctable->get(n),CastToGSCMatrix(A));		}
+	ICF	void						set_c				(LPCSTR n, const Matrix4x4& A)										{ if(ctable)	set_c	(&*ctable->get(n),A);		}
 	ICF	void						set_c				(LPCSTR n, const Fvector4& A)										{ if(ctable)	set_c	(&*ctable->get(n),A);		}
 	ICF	void						set_c				(LPCSTR n, float x, float y, float z, float w)						{ if(ctable)	set_c	(&*ctable->get(n),x,y,z,w);	}
-	ICF	void						set_ca				(LPCSTR n, u32 e, const Fmatrix& A)									{ if(ctable)	set_ca	(&*ctable->get(n),e,A);		}
+	ICF	void						set_ca				(LPCSTR n, u32 e, const Matrix4x4& A)									{ if(ctable)	set_ca	(&*ctable->get(n),e,A);		}
 	ICF	void						set_ca				(LPCSTR n, u32 e, const Fvector4& A)								{ if(ctable)	set_ca	(&*ctable->get(n),e,A);		}
 	ICF	void						set_ca				(LPCSTR n, u32 e, float x, float y, float z, float w)				{ if(ctable)	set_ca	(&*ctable->get(n),e,x,y,z,w);}
 #ifdef USE_DX11
@@ -342,10 +339,10 @@ public:
 #endif
 
 	// constants - shared_str (average)
-	ICF	void						set_c				(shared_str& n, const Fmatrix& A)									{ if(ctable)	set_c	(&*ctable->get(n),A);			}
+	ICF	void						set_c				(shared_str& n, const Matrix4x4& A)									{ if(ctable)	set_c	(&*ctable->get(n),A);			}
 	ICF	void						set_c				(shared_str& n, const Fvector4& A)									{ if(ctable)	set_c	(&*ctable->get(n),A);			}
 	ICF	void						set_c				(shared_str& n, float x, float y, float z, float w)					{ if(ctable)	set_c	(&*ctable->get(n),x,y,z,w);	}
-	ICF	void						set_ca				(shared_str& n, u32 e, const Fmatrix& A)							{ if(ctable)	set_ca	(&*ctable->get(n),e,A);		}
+	ICF	void						set_ca				(shared_str& n, u32 e, const Matrix4x4& A)							{ if(ctable)	set_ca	(&*ctable->get(n),e,A);		}
 	ICF	void						set_ca				(shared_str& n, u32 e, const Fvector4& A)							{ if(ctable)	set_ca	(&*ctable->get(n),e,A);		}
 	ICF	void						set_ca				(shared_str& n, u32 e, float x, float y, float z, float w)			{ if(ctable)	set_ca	(&*ctable->get(n),e,x,y,z,w);}
 #ifdef USE_DX11
@@ -390,12 +387,12 @@ public:
 #endif
 	void dbg_Draw					(D3DPRIMITIVETYPE T, FVF::L* pVerts, int vcnt, u16* pIdx, int pcnt);
 	void dbg_Draw					(D3DPRIMITIVETYPE T, FVF::L* pVerts, int pcnt);
-	IC void dbg_DrawAABB			(Fvector& fT, float sx, float sy, float sz, u32 uC)						{	Fvector half_dim;	half_dim.set(sx,sy,sz); Fmatrix	TM;	TM.translate(fT); dbg_DrawOBB(TM,half_dim,uC);	}
-	void dbg_DrawOBB				(Fmatrix& fT, Fvector& half_dim, u32 uC);
-	IC void dbg_DrawTRI				(Fmatrix& fT, Fvector* p, u32 uC)											{	dbg_DrawTRI(fT,p[0],p[1],p[2],uC);	}
-	void dbg_DrawTRI				(Fmatrix& fT, Fvector& p1, Fvector& p2, Fvector& p3, u32 uC);
-	void dbg_DrawLINE				(Fmatrix& fT, Fvector& p1, Fvector& p2, u32 uC);
-	void dbg_DrawEllipse			(Fmatrix& fT, u32 uC);
+	IC void dbg_DrawAABB			(Fvector& fT, float sx, float sy, float sz, u32 uC)						{	Fvector half_dim;	half_dim.set(sx,sy,sz); Matrix4x4	TM;	TM.Translate(fT); dbg_DrawOBB(TM,half_dim,uC);	}
+	void dbg_DrawOBB				(Matrix4x4& fT, Fvector& half_dim, u32 uC);
+	IC void dbg_DrawTRI				(Matrix4x4& fT, Fvector* p, u32 uC)											{	dbg_DrawTRI(fT,p[0],p[1],p[2],uC);	}
+	void dbg_DrawTRI				(Matrix4x4& fT, Fvector& p1, Fvector& p2, Fvector& p3, u32 uC);
+	void dbg_DrawLINE				(Matrix4x4& fT, Fvector& p1, Fvector& p2, u32 uC);
+	void dbg_DrawEllipse			(Matrix4x4& fT, u32 uC);
 
 	CBackend()						{	Invalidate(); };
 

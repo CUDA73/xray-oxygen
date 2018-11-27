@@ -258,8 +258,8 @@ public:
 	void						accum_volumetric_geom_create();
 	void						accum_volumetric_geom_destroy();
 
-	void						u_compute_texgen_screen	(Fmatrix&	dest);
-	void						u_compute_texgen_jitter	(Fmatrix&	dest);
+	void						u_compute_texgen_screen	(Matrix4x4&	dest);
+	void						u_compute_texgen_jitter	(Matrix4x4&	dest);
 	void						u_setrt					(const ref_rt& _1, const ref_rt& _2, const ref_rt& _3, ID3DDepthStencilView* zb);
 	void						u_setrt					(const ref_rt& _1, const ref_rt& _2, ID3DDepthStencilView* zb);
 	void						u_setrt					(u32 W, u32 H, ID3DRenderTargetView* _1, ID3DRenderTargetView* _2, ID3DRenderTargetView* _3, ID3DDepthStencilView* zb);
@@ -324,11 +324,11 @@ public:
 
 	void						draw_volume				(light* L);
 	void						accum_direct			(u32	sub_phase);
-	void						accum_direct_cascade	(u32	sub_phase, Fmatrix& xform, Fmatrix& xform_prev, float fBias );
+	void						accum_direct_cascade	(u32	sub_phase, Matrix4x4& xform, Matrix4x4& xform_prev, float fBias );
 	void						accum_direct_f			(u32	sub_phase);
 	void						accum_direct_lum		();
 	void						accum_direct_blend		();
-	void						accum_direct_volumetric	(u32	sub_phase, const u32 Offset, const Fmatrix &mShadow);
+	void						accum_direct_volumetric	(u32	sub_phase, const u32 Offset, const Matrix4x4 &mShadow);
 	void						accum_point				(light* L);
 	void						accum_spot				(light* L);
 	void						accum_reflected			(light* L);

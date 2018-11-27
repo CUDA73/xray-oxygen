@@ -201,7 +201,7 @@ public:
 
 	// Main 
 	IC		void					set_Frustum				(CFrustum*	O	)							{ VERIFY(O);	View = O;			}
-	virtual void					set_Transform			(Fmatrix*	M	)							= 0;
+	virtual void					set_Transform			(Matrix4x4*	M	)							= 0;
 	virtual void					set_HUD					(BOOL 		V	)							= 0;
 	virtual BOOL					get_HUD					()											= 0;
 	virtual void					set_Invisible			(BOOL 		V	)							= 0;
@@ -215,7 +215,7 @@ public:
 	virtual void					add_StaticWallmark		(IWallMarkArray *pArray, const Fvector& P, float s, CDB::TRI* T, Fvector* V)=0;
 	virtual void					clear_static_wallmarks	()=0;
 	//	Prefer this function when possible
-	virtual void					add_SkeletonWallmark	(const Fmatrix* xf, IKinematics* obj, IWallMarkArray *pArray, const Fvector& start, const Fvector& dir, float size)=0;
+	virtual void					add_SkeletonWallmark	(const Matrix4x4* xf, IKinematics* obj, IWallMarkArray *pArray, const Fvector& start, const Fvector& dir, float size)=0;
 
 	virtual IRender_ObjectSpecific*	ros_create				(IRenderable* parent)						= 0;
 	virtual void					ros_destroy				(IRender_ObjectSpecific* &)					= 0;

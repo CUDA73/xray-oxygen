@@ -25,10 +25,10 @@ public:
 		Fvector	tri[3];
 	};
 public:
-	virtual		void					Bone_Calculate		(CBoneData* bd, Fmatrix* parent) = 0;
-	virtual		void					Bone_GetAnimPos(Fmatrix& pos,u16 id, u8 channel_mask, bool ignore_callbacks) = 0;
+	virtual		void					Bone_Calculate		(CBoneData* bd, Matrix4x4* parent) = 0;
+	virtual		void					Bone_GetAnimPos(Matrix4x4& pos,u16 id, u8 channel_mask, bool ignore_callbacks) = 0;
 
-	virtual		bool					PickBone			(const Fmatrix &parent_xform, pick_result &r, float dist, const Fvector& start, const Fvector& dir, u16 bone_id) = 0;
+	virtual		bool					PickBone			(const Matrix4x4 &parent_xform, pick_result &r, float dist, const Fvector& start, const Fvector& dir, u16 bone_id) = 0;
 	virtual		void					EnumBoneVertices	(SEnumVerticesCallback &C, u16 bone_id) = 0;
 
 	// Low level interface
@@ -48,13 +48,13 @@ virtual	const IBoneData&		_BCL	GetBoneData(u16 bone_id) const = 0;
 	virtual u16					_BCL	LL_BoneCount()const = 0;
 	virtual u16							LL_VisibleBoneCount() = 0;
 
-	virtual ICF			Fmatrix& _BCL	LL_GetTransform(u16 bone_id) = 0;
-	virtual ICF const	Fmatrix& _BCL	LL_GetTransform(u16 bone_id) const = 0;
+	virtual ICF			Matrix4x4& _BCL	LL_GetTransform(u16 bone_id) = 0;
+	virtual ICF const	Matrix4x4& _BCL	LL_GetTransform(u16 bone_id) const = 0;
 
-	virtual ICF Fmatrix&				LL_GetTransform_R(u16 bone_id) = 0;
+	virtual ICF Matrix4x4&				LL_GetTransform_R(u16 bone_id) = 0;
 	virtual Fobb&						LL_GetBox(u16 bone_id) = 0;
 	virtual const Fbox&			_BCL	GetBox()const = 0;
-	virtual void						LL_GetBindTransform(xr_vector<Fmatrix>& matrices) = 0;
+	virtual void						LL_GetBindTransform(xr_vector<Matrix4x4>& matrices) = 0;
 	virtual int 						LL_GetBoneGroups(xr_vector<xr_vector<u16> >& groups) = 0;
 
 	virtual u16					_BCL	LL_GetBoneRoot() = 0;
@@ -80,7 +80,7 @@ virtual	const IBoneData&		_BCL	GetBoneData(u16 bone_id) const = 0;
 	virtual IKinematicsAnimated*		dcast_PKinematicsAnimated() = 0;
 
 	// debug
-	virtual void						DebugRender			(Fmatrix& XFORM) = 0;
+	virtual void						DebugRender			(Matrix4x4& XFORM) = 0;
 	virtual shared_str			_BCL	getDebugName		() = 0;
 };
 

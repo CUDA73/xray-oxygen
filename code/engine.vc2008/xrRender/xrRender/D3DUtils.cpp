@@ -306,7 +306,7 @@ void CDrawUtilities::DrawDirectionalLight(const Fvector& p, const Fvector& d, fl
 
 void CDrawUtilities::DrawPointLight(const Fvector& p, float radius, u32 c)
 {
-	RCache.set_xform_world(Fidentity);
+	RCache.set_xform_world(DirectX::XMMatrixIdentity());
 	DrawCross(p, radius,radius,radius, radius,radius,radius, c, true);
 }
 

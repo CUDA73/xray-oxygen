@@ -72,9 +72,9 @@ static class cl_texgen : public R_constant_setup
 {
 	virtual void setup(R_constant* C)
 	{
-		Fmatrix mTexgen;
+		Matrix4x4 mTexgen;
 #ifdef USE_DX11
-		Fmatrix mTexelAdjust = 
+		Matrix4x4 mTexelAdjust = 
 		{
 			0.5f,				0.0f,				0.0f,			0.0f,
 			0.0f,				-0.5f,				0.0f,			0.0f,
@@ -86,7 +86,7 @@ static class cl_texgen : public R_constant_setup
 		float _h	= float(RDEVICE.dwHeight);
 		float o_w	= (0.5f / _w);
 		float o_h	= (0.5f / _h);
-		Fmatrix mTexelAdjust = 
+		Matrix4x4 mTexelAdjust = 
 		{
 			0.5f,				0.0f,				0.0f,			0.0f,
 			0.0f,				-0.5f,				0.0f,			0.0f,
@@ -94,7 +94,7 @@ static class cl_texgen : public R_constant_setup
 			0.5f + o_w,			0.5f + o_h,			0.0f,			1.0f
 		};
 #endif
-		mTexgen.mul(mTexelAdjust, RCache.xforms.m_wvp);
+		mTexgen.Multiply(RCache.xforms.m_wvp, mTexelAdjust);
 		RCache.set_c(C, mTexgen);
 	}
 } binder_texgen;
@@ -103,9 +103,9 @@ static class cl_VPtexgen : public R_constant_setup
 {
 	virtual void setup(R_constant* C)
 	{
-		Fmatrix mTexgen;
+		Matrix4x4 mTexgen;
 #ifdef USE_DX11
-		Fmatrix mTexelAdjust = 
+		Matrix4x4 mTexelAdjust = 
 		{
 			0.5f,				0.0f,				0.0f,			0.0f,
 			0.0f,				-0.5f,				0.0f,			0.0f,
@@ -117,7 +117,7 @@ static class cl_VPtexgen : public R_constant_setup
 		float _h	= float(RDEVICE.dwHeight);
 		float o_w	= (0.5f / _w);
 		float o_h	= (0.5f / _h);
-		Fmatrix mTexelAdjust = 
+		Matrix4x4 mTexelAdjust = 
 		{
 			0.5f,				0.0f,				0.0f,			0.0f,
 			0.0f,				-0.5f,				0.0f,			0.0f,
@@ -125,7 +125,7 @@ static class cl_VPtexgen : public R_constant_setup
 			0.5f + o_w,			0.5f + o_h,			0.0f,			1.0f
 		};
 #endif
-		mTexgen.mul(mTexelAdjust,RCache.xforms.m_vp);
+		mTexgen.Multiply(RCache.xforms.m_vp, mTexelAdjust);
 		RCache.set_c(C, mTexgen);
 	}
 } binder_VPtexgen;
@@ -142,11 +142,11 @@ static class cl_fog_plane : public R_constant_setup
 		{
 			// Plane
 			Fvector4 plane;
-			Fmatrix& M		= CastToGSCMatrix(Device.mFullTransform);
-			plane.x			= -(M._14 + M._13);
-			plane.y			= -(M._24 + M._23);
-			plane.z			= -(M._34 + M._33);
-			plane.w			= -(M._44 + M._43);
+			Matrix4x4& M		= Device.mFullTransform;
+			plane.x			= -(M.x[3] + M.x[2]);
+			plane.y			= -(M.y[3] + M.y[2]);
+			plane.z			= -(M.z[3] + M.z[2]);
+			plane.w			= -(M.w[3] + M.w[2]);
 			float denom		= -1.0f / _sqrt(_sqr(plane.x) + _sqr(plane.y) + _sqr(plane.z));
 			plane.mul		(denom);
 

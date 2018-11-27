@@ -7,9 +7,9 @@ struct SPuddle
 	Fvector		P;
 	float		max_depth;
 	float		radius;
-	Fmatrix		xform;
+	Matrix4x4	xform;
 
-	SPuddle() {P.set(0,0,0); max_depth = 0; radius = 30; xform.identity();};
+	SPuddle() {P.set(0,0,0); max_depth = 0; radius = 30; xform.Identity();};
 	void		make_xform();
 };
 

@@ -78,8 +78,8 @@ public:
 	u32										i_marker;		// input
 	u32										i_options;		// input:	culling options
 	Fvector									i_vBase;		// input:	"view" point
-	Fmatrix									i_mXFORM;		// input:	4x4 xform
-	Fmatrix									i_mXFORM_01;	// 
+	Matrix4x4									i_mXFORM;		// input:	4x4 xform
+	Matrix4x4									i_mXFORM_01;	// 
 	CSector*								i_start;		// input:	starting point
 	xr_vector<IRender_Sector*>				r_sectors;		// result
 	xr_vector<std::pair<CPortal*, float> >	f_portals;		// 
@@ -89,7 +89,7 @@ public:
 									CPortalTraverser	();
 	void							initialize			();
 	void							destroy				();
-	void							traverse			(IRender_Sector* start, CFrustum& F, Fvector& vBase, Fmatrix& mXFORM, u32 options);
+	void							traverse			(IRender_Sector* start, CFrustum& F, Fvector& vBase, Matrix4x4& mXFORM, u32 options);
 	void							fade_portal			(CPortal* _p, float ssa);
 	void							fade_render			();
 #ifdef DEBUG

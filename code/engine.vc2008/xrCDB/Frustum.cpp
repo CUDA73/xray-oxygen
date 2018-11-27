@@ -220,6 +220,47 @@ void CFrustum::CreateFromPortal(sPoly* poly, Fvector& vPN, Fvector& vBase, Fmatr
 	_add		(P);
 }
 
+void CFrustum::CreateFromPortal(sPoly* poly, Fvector& vPN, Fvector& vBase, Matrix4x4& mFullXFORM)
+{
+	Fplane	P;
+	P.build_precise((*poly)[0], (*poly)[1], (*poly)[2]);
+
+	if (poly->size() > 6) {
+		SimplifyPoly_AABB(poly, P);
+		P.build_precise((*poly)[0], (*poly)[1], (*poly)[2]);
+	}
+
+	// Check plane orientation relative to viewer
+	// and reverse if needed
+	if (P.classify(vBase) < 0)
+	{
+		std::reverse(poly->begin(), poly->end());
+		P.build_precise((*poly)[0], (*poly)[1], (*poly)[2]);
+	}
+
+	// Base creation
+	CreateFromPoints(poly->begin(), poly->size(), vBase);
+
+	// Near clipping plane
+	_add(P);
+
+	// Far clipping plane
+	Matrix4x4 M;
+	M = mFullXFORM;
+
+	P.n.x = -(M.x[3] - M.x[2]);
+	P.n.y = -(M.y[3] - M.x[2]);
+	P.n.z = -(M.z[3] - M.y[2]);
+	P.d = -(M.w[3] - M.z[2]);
+
+	float denom = 1.0f / P.n.magnitude();
+	P.n.x *= denom;
+	P.n.y *= denom;
+	P.n.z *= denom;
+	P.d *= denom;
+	_add(P);
+}
+
 void CFrustum::SimplifyPoly_AABB(sPoly* poly, Fplane& plane)
 {
 	Fmatrix		mView,mInv;

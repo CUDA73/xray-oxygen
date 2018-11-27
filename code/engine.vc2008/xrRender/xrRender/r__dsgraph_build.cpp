@@ -235,12 +235,13 @@ void R_dsgraph_structure::r_dsgraph_insert_static	(dxRender_Visual *pVisual)
 	VERIFY						(pVisual->shader._get());
 	ShaderElement*		sh_d	= &*pVisual->shader->E[4];
 
-	if (RImplementation.o.distortion && sh_d && sh_d->flags.bDistort && pmask[sh_d->flags.iPriority/2]) {
+	if (RImplementation.o.distortion && sh_d && sh_d->flags.bDistort && pmask[sh_d->flags.iPriority/2]) 
+	{
 		_MatrixItemS temp; 
 		temp.ssa = SSA;
-		temp.pObject = NULL;
+		temp.pObject = nullptr;
 		temp.pVisual = pVisual;
-		temp.Matrix = Fidentity;
+		temp.Matrix.Identity();
 		temp.se = sh_d;		// 4=L_special
 		mapDistort.emplace_back(std::make_pair(distSQ, temp));
 	}
@@ -251,11 +252,12 @@ void R_dsgraph_structure::r_dsgraph_insert_static	(dxRender_Visual *pVisual)
 	if (!pmask[sh->flags.iPriority/2])		return;
 
 	// strict-sorting selection
-	if (sh->flags.bStrictB2F) {
+	if (sh->flags.bStrictB2F) 
+	{
 		_MatrixItemS temp;
-		temp.pObject = NULL;
+		temp.pObject = nullptr;
 		temp.pVisual = pVisual;
-		temp.Matrix = Fidentity;
+		temp.Matrix = DirectX::XMMatrixIdentity();
 		temp.se = sh;
 		mapSorted.emplace_back(std::make_pair(distSQ, temp));
 
@@ -273,7 +275,7 @@ void R_dsgraph_structure::r_dsgraph_insert_static	(dxRender_Visual *pVisual)
 		temp.ssa = SSA;
 		temp.pObject = NULL;
 		temp.pVisual = pVisual;
-		temp.Matrix = Fidentity;
+		temp.Matrix = DirectX::XMMatrixIdentity();
 		temp.se = &*pVisual->shader->E[4];		// 4=L_special
 		mapEmissive.emplace_back(std::make_pair(distSQ, temp));
 	}
@@ -283,7 +285,7 @@ void R_dsgraph_structure::r_dsgraph_insert_static	(dxRender_Visual *pVisual)
 		temp.ssa = SSA;
 		temp.pObject = nullptr;
 		temp.pVisual = pVisual;
-		temp.Matrix = Fidentity;
+		temp.Matrix = DirectX::XMMatrixIdentity();
 		temp.se = sh;
 		mapWmark.emplace_back(std::make_pair(distSQ, temp));
 		return;
@@ -409,8 +411,8 @@ void CRender::add_leafs_Dynamic	(dxRender_Visual *pVisual)
 			BOOL	_use_lod			= FALSE	;
 			if (pV->m_lod)				
 			{
-				Fvector							Tpos;	float		D;
-				val_pTransform->transform_tiny	(Tpos, pV->vis.sphere.P);
+				Fvector Tpos;	float		D;
+				XRay::Math::TransformTiny(*val_pTransform, Tpos, pV->vis.sphere.P);
 				float		ssa		=	CalcSSA	(D,Tpos,pV->vis.sphere.R/2.f);	// assume dynamics never consume full sphere
 				if (ssa<r_ssaLOD_A)	_use_lod	= TRUE;
 			}
@@ -436,7 +438,7 @@ void CRender::add_leafs_Dynamic	(dxRender_Visual *pVisual)
 			// General type of visual
 			// Calculate distance to it's center
 			Fvector							Tpos;
-			val_pTransform->transform_tiny	(Tpos, pVisual->vis.sphere.P);
+			XRay::Math::TransformTiny(*val_pTransform, Tpos, pVisual->vis.sphere.P);
 			r_dsgraph_insert_dynamic		(pVisual,Tpos);
 		}
 		return;
@@ -543,7 +545,7 @@ BOOL CRender::add_Dynamic(dxRender_Visual *pVisual, u32 planes)
 	Fvector		Tpos;	// transformed position
 	EFC_Visible	VIS;
 
-	val_pTransform->transform_tiny	(Tpos, pVisual->vis.sphere.P);
+	XRay::Math::TransformTiny(*val_pTransform, Tpos, pVisual->vis.sphere.P);
 	VIS = View->testSphere			(Tpos, pVisual->vis.sphere.R,planes);
 	if (fcvNone==VIS) return FALSE	;
 
@@ -595,7 +597,7 @@ BOOL CRender::add_Dynamic(dxRender_Visual *pVisual, u32 planes)
 			if (pV->m_lod)				
 			{
 				Fvector							Tpos;	float		D;
-				val_pTransform->transform_tiny	(Tpos, pV->vis.sphere.P);
+				XRay::Math::TransformTiny(*val_pTransform, Tpos, pV->vis.sphere.P);
 				float		ssa		=	CalcSSA	(D,Tpos,pV->vis.sphere.R/2.f);	// assume dynamics never consume full sphere
 				if (ssa<r_ssaLOD_A)	_use_lod	= TRUE		;
 			}

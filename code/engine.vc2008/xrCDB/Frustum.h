@@ -73,6 +73,7 @@ public:
 	void			CreateFromMatrix	(const Matrix4x4 &M, u32 mask) noexcept;
 
 	void			CreateFromPortal	(sPoly* P,		Fvector& vPN,	Fvector& vBase, Fmatrix& mFullXFORM);
+	void			CreateFromPortal	(sPoly* P,		Fvector& vPN,	Fvector& vBase, Matrix4x4& mFullXFORM);
 	void			CreateFromPlanes	(Fplane* p,		int count);
 
 	sPoly*			ClipPoly			(sPoly& src, sPoly& dest) const;

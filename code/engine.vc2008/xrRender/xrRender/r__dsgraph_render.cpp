@@ -250,7 +250,7 @@ void R_dsgraph_structure::r_dsgraph_render_graph(u32 _priority, bool)
 	// Perform sorting based on ScreenSpaceArea
 	// Sorting by SSA and changes minimizations
 	{
-		RCache.set_xform_world(Fidentity);
+		RCache.set_xform_world(DirectX::XMMatrixIdentity());
 
 		// Render several passes
 		for (u32 iPass = 0; iPass < SHADER_PASSES_MAX; ++iPass)
@@ -552,7 +552,7 @@ void R_dsgraph_structure::r_dsgraph_render_hud_ui()
 	// Restore projection
 	Device.mProject = Pold;
 	Device.mFullTransform = FTold;
-	RCache.set_xform_project(CastToGSCMatrix(Device.mProject));
+	RCache.set_xform_project((Device.mProject));
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -573,7 +573,7 @@ void	R_dsgraph_structure::r_dsgraph_render_sorted	()
 	Device.mProject.BuildProj(deg2rad(psHUD_FOV*Device.fFOV), Device.fASPECT, VIEWPORT_NEAR, Environment().CurrentEnv->far_plane);
 
 	Device.mFullTransform = DirectX::XMMatrixMultiply(Device.mView, Device.mProject);
-	RCache.set_xform_project(CastToGSCMatrix(Device.mProject));
+	RCache.set_xform_project((Device.mProject));
 
 
 	// Rendering
@@ -587,7 +587,7 @@ void	R_dsgraph_structure::r_dsgraph_render_sorted	()
 	// Restore projection
 	Device.mProject = Pold;
 	Device.mFullTransform = FTold;
-	RCache.set_xform_project(CastToGSCMatrix(Device.mProject));
+	RCache.set_xform_project((Device.mProject));
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -609,8 +609,8 @@ void	R_dsgraph_structure::r_dsgraph_render_emissive	()
 	Matrix4x4 FTold = Device.mFullTransform;
 	Device.mProject.BuildProj(deg2rad(psHUD_FOV*Device.fFOV), Device.fASPECT, VIEWPORT_NEAR, Environment().CurrentEnv->far_plane);
 
-	Device.mFullTransform = DirectX::XMMatrixMultiply(Device.mView, Device.mProject);
-	RCache.set_xform_project(CastToGSCMatrix(Device.mProject));
+	Device.mFullTransform.Multiply(Device.mView, Device.mProject);
+	RCache.set_xform_project((Device.mProject));
 
 
 	// Rendering
@@ -626,7 +626,7 @@ void	R_dsgraph_structure::r_dsgraph_render_emissive	()
 	// Restore projection
 	Device.mProject				= Pold;
 	Device.mFullTransform		= FTold;
-	RCache.set_xform_project(CastToGSCMatrix(Device.mProject));
+	RCache.set_xform_project((Device.mProject));
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -652,7 +652,7 @@ void	R_dsgraph_structure::r_dsgraph_render_distort	()
 
 //////////////////////////////////////////////////////////////////////////
 // sub-space rendering - shortcut to render with frustum extracted from matrix
-void	R_dsgraph_structure::r_dsgraph_render_subspace	(IRender_Sector* _sector, Fmatrix& mCombined, Fvector& _cop, BOOL _dynamic, BOOL _precise_portals)
+void	R_dsgraph_structure::r_dsgraph_render_subspace	(IRender_Sector* _sector, Matrix4x4& mCombined, Fvector& _cop, BOOL _dynamic, BOOL _precise_portals)
 {
 	CFrustum	temp;
 	temp.CreateFromMatrix			(mCombined,	FRUSTUM_P_ALL &(~FRUSTUM_P_NEAR));
@@ -660,7 +660,7 @@ void	R_dsgraph_structure::r_dsgraph_render_subspace	(IRender_Sector* _sector, Fm
 }
 
 // sub-space rendering - main procedure
-void	R_dsgraph_structure::r_dsgraph_render_subspace	(IRender_Sector* _sector, CFrustum* _frustum, Fmatrix& mCombined, Fvector& _cop, BOOL _dynamic, BOOL _precise_portals)
+void	R_dsgraph_structure::r_dsgraph_render_subspace	(IRender_Sector* _sector, CFrustum* _frustum, Matrix4x4& mCombined, Fvector& _cop, BOOL _dynamic, BOOL _precise_portals)
 {
 	VERIFY							(_sector);
 	RImplementation.marker			++;			// !!! critical here

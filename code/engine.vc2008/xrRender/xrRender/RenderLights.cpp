@@ -107,7 +107,7 @@ void CRender::render_lights(light_Package& LP)
 
 			L->svis.begin();
 			PIX_EVENT(SHADOWED_LIGHTS_RENDER_SUBSPACE);
-			r_dsgraph_render_subspace(L->spatial.sector, CastToGSCMatrix(L->X.S.combine), L->position, TRUE);
+			r_dsgraph_render_subspace(L->spatial.sector, (L->X.S.combine), L->position, TRUE);
 
 			bool bNormal = mapNormalPasses[0][0].size() || mapMatrixPasses[0][0].size();
 			bool bSpecial = mapNormalPasses[1][0].size() || mapMatrixPasses[1][0].size() || mapSorted.size();
@@ -117,7 +117,7 @@ void CRender::render_lights(light_Package& LP)
 				stats.s_merged++;
 				L_spot_s.push_back(L);
 				Target->phase_smap_spot(L);
-				RCache.set_xform_world(Fidentity);
+				RCache.set_xform_world(DirectX::XMMatrixIdentity());
 				RCache.set_xform_view(L->X.S.view);
 				RCache.set_xform_project(L->X.S.project);
 				r_dsgraph_render_graph(0);

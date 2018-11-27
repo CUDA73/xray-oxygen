@@ -23,26 +23,22 @@ IC void		R_xforms::set_c_wv			(R_constant* C)		{	c_wv	= C;	RCache.set_c(C,m_wv);
 IC void		R_xforms::set_c_vp			(R_constant* C)		{	c_vp	= C;	RCache.set_c(C,m_vp);	};
 IC void		R_xforms::set_c_wvp			(R_constant* C)		{	c_wvp	= C;	RCache.set_c(C,m_wvp);	};
 
-IC	void	CBackend::set_xform_world(const Fmatrix& fM)
+IC	void	CBackend::set_xform_world(const Matrix4x4& fM)
 {
 	xforms.set_W(fM);
 }
 
-IC	void	CBackend::set_xform_world(const Matrix4x4& fM)
-{
-	xforms.set_W(CastToGSCMatrix(fM));
-}
-IC	void	CBackend::set_xform_view	(const Fmatrix& fM)					
+IC	void	CBackend::set_xform_view	(const Matrix4x4& fM)					
 { 
 	xforms.set_V(fM);	
 }
-IC	void	CBackend::set_xform_project	(const Fmatrix& fM)
+IC	void	CBackend::set_xform_project	(const Matrix4x4& fM)
 { 
 	xforms.set_P(fM);	
 }
-IC	const Fmatrix&	CBackend::get_xform_world	()	{ return xforms.get_W();	}
-IC	const Fmatrix&	CBackend::get_xform_view	()	{ return xforms.get_V();	}
-IC	const Fmatrix&	CBackend::get_xform_project	()	{ return xforms.get_P();	}
+IC	const Matrix4x4&	CBackend::get_xform_world	()	{ return xforms.get_W();	}
+IC	const Matrix4x4&	CBackend::get_xform_view	()	{ return xforms.get_V();	}
+IC	const Matrix4x4&	CBackend::get_xform_project	()	{ return xforms.get_P();	}
 
 IC	ID3DRenderTargetView* CBackend::get_RT(u32 ID)
 {

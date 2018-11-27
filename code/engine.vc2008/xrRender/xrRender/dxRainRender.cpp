@@ -185,7 +185,7 @@ void dxRainRender::Render(CEffect_Rain &owner)
 	// Render if needed
 	if (vCount)	{
 		RCache.set_CullMode(CULL_NONE);
-		RCache.set_xform_world		(Fidentity);
+		RCache.set_xform_world		(DirectX::XMMatrixIdentity());
 		RCache.set_Shader			(SH_Rain);
 		RCache.set_Geometry			(hGeom_Rain);
 		RCache.Render				(D3DPT_TRIANGLELIST,vOffset,0,vCount,0,vCount/2);

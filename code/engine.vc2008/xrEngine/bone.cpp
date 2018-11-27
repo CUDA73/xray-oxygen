@@ -41,16 +41,16 @@ void ENGINE_API	CBoneData::DebugQuery		(BoneDebug& L)
 	}
 }
 
-void ENGINE_API	CBoneData::CalculateM2B(const Fmatrix& parent)
+void ENGINE_API	CBoneData::CalculateM2B(const Matrix4x4& parent)
 {
 	// Build matrix
-	m2b_transform.mul_43	(parent,bind_transform);
+	m2b_transform.Multiply43	(bind_transform, parent);
 
 	// Calculate children
 	for (CBoneData* C : children)
 		C->CalculateM2B	(m2b_transform);
 
-	m2b_transform.invert	();            
+	m2b_transform.InvertMatrixByMatrix(m2b_transform);
 }
 
 u16	CBoneData::GetNumChildren	( )const

@@ -202,7 +202,7 @@ IC void FillSprite	(FVF::LIT*& pv, const Fvector& pos, float r, u32 clr)
 void CGlowManager::Render			()
 {
 	if (Selected.empty())					return		;
-	RCache.set_xform_world					(Fidentity)	;
+	RCache.set_xform_world					(DirectX::XMMatrixIdentity())	;
 
 	Device.Statistic->RenderDUMP_Glows.Begin	();
 	render_sw								();

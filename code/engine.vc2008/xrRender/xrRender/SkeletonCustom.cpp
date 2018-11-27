@@ -49,7 +49,7 @@ LPCSTR CKinematics::LL_BoneName_dbg	(u16 ID)
 	return 0;
 }
 
-void CKinematics::DebugRender(Fmatrix& XFORM)
+void CKinematics::DebugRender(Matrix4x4& XFORM)
 {
 	CalculateBones	();
 
@@ -60,16 +60,17 @@ void CKinematics::DebugRender(Fmatrix& XFORM)
 	Fvector H1; H1.set(0.01f,0.01f,0.01f);
 	Fvector H2; H2.mul(H1,2);
 	for (u32 i=0; i<dbgLines.size(); i+=2)	{
-		Fmatrix& M1 = bone_instances[dbgLines[i]].mTransform;
-		Fmatrix& M2 = bone_instances[dbgLines[i+1]].mTransform;
+		Matrix4x4& M1 = bone_instances[dbgLines[i]].mTransform;
+		Matrix4x4& M2 = bone_instances[dbgLines[i+1]].mTransform;
 
 		Fvector P1,P2;
-		M1.transform_tiny(P1,Z);
-		M2.transform_tiny(P2,Z);
+		XRay::Math::TransformTiny(M1,P1,Z);
+		XRay::Math::TransformTiny(M2,P2,Z);
+
 		RCache.dbg_DrawLINE(XFORM,P1,P2,D3DCOLOR_XRGB(0,255,0));
 
-		Fmatrix M;
-		M.mul_43(XFORM,M2);
+		Matrix4x4 M;
+		M.Multiply43(M2, XFORM);
 		RCache.dbg_DrawOBB(M,H1,D3DCOLOR_XRGB(255,255,255));
 		RCache.dbg_DrawOBB(M,H2,D3DCOLOR_XRGB(255,255,255));
 	}
@@ -77,10 +78,10 @@ void CKinematics::DebugRender(Fmatrix& XFORM)
 	for (u32 b=0; b<bones->size(); b++)
 	{
 		Fobb&		obb		= (*bones)[b]->obb;
-		Fmatrix&	Mbone	= bone_instances[b].mTransform;
-		Fmatrix		Mbox;	obb.xform_get(Mbox);
-		Fmatrix		X;		X.mul(Mbone,Mbox);
-		Fmatrix		W;		W.mul(XFORM,X);
+		Matrix4x4&	Mbone	= bone_instances[b].mTransform;
+		Matrix4x4		Mbox;	obb.xform_get(CastToGSCMatrix(Mbox));
+		Matrix4x4		X;		X.Multiply(Mbone,Mbox);
+		Matrix4x4		W;		W.Multiply(XFORM,X);
 		RCache.dbg_DrawOBB(W,obb.m_halfsize,D3DCOLOR_XRGB(0,0,255));
 	}
 }
@@ -256,13 +257,13 @@ void	CKinematics::Load(const char* N, IReader *data, u32 dwFlags)
             Fvector vXYZ,vT;
             IKD->r_fvector3	(vXYZ);
             IKD->r_fvector3	(vT);
-            B->bind_transform.setXYZi(vXYZ);
-            B->bind_transform.translate_over(vT);
+            B->bind_transform.SetHPB(-vXYZ.x, -vXYZ.y, -vXYZ.z);
+			B->bind_transform.w = { vT.x, vT.y, vT.z, B->bind_transform.w[3] };
 	        B->mass			= IKD->r_float();
     	    IKD->r_fvector3	(B->center_of_mass);
         }
         // calculate model to bone converting matrix
-        (*bones)[LL_GetBoneRoot()]->CalculateM2B(Fidentity);
+        (*bones)[LL_GetBoneRoot()]->CalculateM2B(DirectX::XMMatrixIdentity());
     	IKD->close();
     }
 
@@ -436,11 +437,11 @@ void CKinematics::LL_SetBoneVisible(u16 bone_id, BOOL val, BOOL bRecursive)
     u64 mask 			= u64(1)<<bone_id;
     visimask.set		(mask,val);
 	if (!visimask.is(mask)){
-        bone_instances[bone_id].mTransform.scale(0.f,0.f,0.f);
+        bone_instances[bone_id].mTransform = DirectX::XMMatrixScaling(0.f,0.f,0.f);
 	}else{
 		CalculateBones_Invalidate	();
 	}
-	bone_instances[bone_id].mRenderTransform.mul_43(bone_instances[bone_id].mTransform,(*bones)[bone_id]->m2b_transform);
+	bone_instances[bone_id].mRenderTransform.Multiply43((*bones)[bone_id]->m2b_transform, bone_instances[bone_id].mTransform);
     if (bRecursive)		{
         for (xr_vector<CBoneData*>::iterator C=(*bones)[bone_id]->children.begin(); C!=(*bones)[bone_id]->children.end(); C++)
             LL_SetBoneVisible((*C)->GetSelfID(),val,bRecursive);
@@ -456,10 +457,10 @@ void CKinematics::LL_SetBonesVisible(u64 mask)
     	if (mask&bm){
         	visimask.set	(bm,TRUE);
         }else{
-	    	Fmatrix& A		= bone_instances[b].mTransform;
-	    	Fmatrix& B		= bone_instances[b].mRenderTransform;
-        	A.scale			(0.f,0.f,0.f);
-	        B.mul_43		(A,(*bones)[b]->m2b_transform);
+	    	Matrix4x4& A		= bone_instances[b].mTransform;
+	    	Matrix4x4& B		= bone_instances[b].mRenderTransform;
+        	A = DirectX::XMMatrixScaling(0.f,0.f,0.f);
+	        B.Multiply43((*bones)[b]->m2b_transform, A);
         }
 	}
 	CalculateBones_Invalidate		();
@@ -492,35 +493,35 @@ void CKinematics::Visibility_Update	()
 	}
 }
 
-IC static void RecursiveBindTransform(CKinematics* K, xr_vector<Fmatrix>& matrices, u16 bone_id, const Fmatrix& parent)
+IC static void RecursiveBindTransform(CKinematics* K, xr_vector<Matrix4x4>& matrices, u16 bone_id, const Matrix4x4& parent)
 {
 	CBoneData& BD			= K->LL_GetData	(bone_id);
-	Fmatrix& BM				= matrices[bone_id];
+	Matrix4x4& BM			= matrices[bone_id];
 	// Build matrix
-	BM.mul_43				(parent,BD.bind_transform);
+	BM.Multiply43(BD.bind_transform, parent);
     for (xr_vector<CBoneData*>::iterator C=BD.children.begin(); C!=BD.children.end(); C++)
 		RecursiveBindTransform(K,matrices,(*C)->GetSelfID(),BM);	
 }
 
-void CKinematics::LL_GetBindTransform(xr_vector<Fmatrix>& matrices)
+void CKinematics::LL_GetBindTransform(xr_vector<Matrix4x4>& matrices)
 {
 	matrices.resize			(LL_BoneCount());
-	RecursiveBindTransform	(this,matrices,iRoot,Fidentity);
+	RecursiveBindTransform	(this,matrices,iRoot,DirectX::XMMatrixIdentity());
 }
 
-void BuildMatrix		(Fmatrix &mView, float invsz, const Fvector norm, const Fvector& from)
+void BuildMatrix		(Matrix4x4 &mView, float invsz, const Fvector norm, const Fvector& from)
 {
 	// build projection
-	Fmatrix				mScale;
+	Matrix4x4				mScale;
 	Fvector				at,up,right,y;
 	at.sub				(from,norm);
 	y.set				(0,1,0);
 	if (_abs(norm.y)>.99f) y.set(1,0,0);
 	right.crossproduct	(y,norm);
 	up.crossproduct		(norm,right);
-	mView.build_camera	(from,at,up);
-	mScale.scale		(invsz,invsz,invsz);
-	mView.mulA_43		(mScale);
+	mView.BuildCamDir	(from,at,up);
+	mScale = DirectX::XMMatrixScaling(invsz,invsz,invsz);
+	mView.Multiply43		(mView, mScale);
 }
 void CKinematics::EnumBoneVertices	(SEnumVerticesCallback &C, u16 bone_id)
 {
@@ -530,32 +531,33 @@ void CKinematics::EnumBoneVertices	(SEnumVerticesCallback &C, u16 bone_id)
 
 using OBBVec = xr_vector<Fobb>;
 
-bool	CKinematics::	PickBone			(const Fmatrix &parent_xform, IKinematics::pick_result &r, float dist, const Fvector& start, const Fvector& dir, u16 bone_id)
+bool	CKinematics::	PickBone			(const Matrix4x4 &parent_xform, IKinematics::pick_result &r, float dist, const Fvector& start, const Fvector& dir, u16 bone_id)
 {
 	Fvector S,D;//normal		= {0,0,0}
 	// transform ray from world to model
-	Fmatrix P;	P.invert	(parent_xform);
-	P.transform_tiny		(S,start);
-	P.transform_dir			(D,dir);
+	Matrix4x4 P;	P.InvertMatrixByMatrix	(parent_xform);
+	XRay::Math::TransformTiny(P, S,start);
+	XRay::Math::TransformDirByMatrix(P, D, dir);
 	for (u32 i=0; i<children.size(); i++)
 			if (LL_GetChild(i)->PickBone(r,dist,S,D,bone_id))
 			{
-				parent_xform.transform_dir			(r.normal);
-				parent_xform.transform_tiny			(r.tri[0]);
-				parent_xform.transform_tiny			(r.tri[1]);
-				parent_xform.transform_tiny			(r.tri[2]);
+				XRay::Math::TransformTiny(parent_xform, r.normal);
+				XRay::Math::TransformTiny(parent_xform, r.tri[0]);
+				XRay::Math::TransformTiny(parent_xform, r.tri[1]);
+				XRay::Math::TransformTiny(parent_xform, r.tri[2]);
 				return true;
 			}
 	return false;
 }
 
-void CKinematics::AddWallmark(const Fmatrix* parent_xform, const Fvector3& start, const Fvector3& dir, ref_shader shader, float size)
+void CKinematics::AddWallmark(const Matrix4x4* parent_xform, const Fvector3& start, const Fvector3& dir, ref_shader shader, float size)
 {
 	Fvector S,D,normal		= {0,0,0};
 	// transform ray from world to model
-	Fmatrix P;	P.invert	(*parent_xform);
-	P.transform_tiny		(S,start);
-	P.transform_dir			(D,dir);
+	Matrix4x4 P;	
+	P.InvertMatrixByMatrix	(*parent_xform);
+	XRay::Math::TransformTiny(P, S, start);
+	XRay::Math::TransformDirByMatrix(P, D, dir);
 	// find pick point
 	float dist				= flt_max;
 	BOOL picked				= FALSE;
@@ -615,17 +617,17 @@ void CKinematics::AddWallmark(const Fmatrix* parent_xform, const Fvector3& start
 	// ok. allocate wallmark
 	intrusive_ptr<CSkeletonWallmark>		wm = xr_new<CSkeletonWallmark>(this,parent_xform,shader,cp,RDEVICE.fTimeGlobal);
 	wm->m_LocalBounds.set		(cp,size*2.f);
-	wm->XFORM()->transform_tiny	(wm->m_Bounds.P,cp);
+	XRay::Math::TransformTiny(*wm->XFORM(), wm->m_Bounds.P,cp);
 	wm->m_Bounds.R				= wm->m_LocalBounds.R; 
 
 	Fvector tmp; tmp.invert		(D);
 	normal.add(tmp).normalize	();
 
 	// build UV projection matrix
-	Fmatrix						mView,mRot;
+	Matrix4x4						mView,mRot;
 	BuildMatrix					(mView,1/(0.9f*size),normal,cp);
-	mRot.rotateZ				(::Random.randF(deg2rad(-20.f),deg2rad(20.f)));
-	mView.mulA_43				(mRot);
+	mRot = DirectX::XMMatrixRotationZ(::Random.randF(deg2rad(-20.f),deg2rad(20.f)));
+	mView.Multiply43				(mView, mRot);
 
 	// fill vertices
 	for (u32 i=0; i<children.size(); i++){
@@ -681,29 +683,30 @@ void CKinematics::RenderWallmark(intrusive_ptr<CSkeletonWallmark> wm, FVF::LIT* 
 			if (F.bone_id[k][0] == F.bone_id[k][1])
 			{
 				// 1-link
-				Fmatrix& xform0 = LL_GetBoneInstance(F.bone_id[k][0]).mRenderTransform;
-				xform0.transform_tiny(P, F.vert[k]);
+				Matrix4x4& xform0 = LL_GetBoneInstance(F.bone_id[k][0]).mRenderTransform;
+				XRay::Math::TransformTiny(xform0, P, F.vert[k]);
 			}
 			else if (F.bone_id[k][1] == F.bone_id[k][2])
 			{
 				// 2-link
 				Fvector P0, P1;
-				Fmatrix& xform0 = LL_GetBoneInstance(F.bone_id[k][0]).mRenderTransform;
-				Fmatrix& xform1 = LL_GetBoneInstance(F.bone_id[k][1]).mRenderTransform;
-				xform0.transform_tiny(P0, F.vert[k]);
-				xform1.transform_tiny(P1, F.vert[k]);
+				Matrix4x4& xform0 = LL_GetBoneInstance(F.bone_id[k][0]).mRenderTransform;
+				Matrix4x4& xform1 = LL_GetBoneInstance(F.bone_id[k][1]).mRenderTransform;
+				XRay::Math::TransformTiny(xform0, P0, F.vert[k]);
+				XRay::Math::TransformTiny(xform1, P1, F.vert[k]);
 				P.lerp(P0, P1, F.weight[k][0]);
 			}
 			else if (F.bone_id[k][2] == F.bone_id[k][3])
 			{
 				// 3-link
 				Fvector P0, P1, P2;
-				Fmatrix& xform0 = LL_GetBoneInstance(F.bone_id[k][0]).mRenderTransform;
-				Fmatrix& xform1 = LL_GetBoneInstance(F.bone_id[k][1]).mRenderTransform;
-				Fmatrix& xform2 = LL_GetBoneInstance(F.bone_id[k][2]).mRenderTransform;
-				xform0.transform_tiny(P0, F.vert[k]);
-				xform1.transform_tiny(P1, F.vert[k]);
-				xform2.transform_tiny(P2, F.vert[k]);
+				Matrix4x4& xform0 = LL_GetBoneInstance(F.bone_id[k][0]).mRenderTransform;
+				Matrix4x4& xform1 = LL_GetBoneInstance(F.bone_id[k][1]).mRenderTransform;
+				Matrix4x4& xform2 = LL_GetBoneInstance(F.bone_id[k][2]).mRenderTransform;
+				XRay::Math::TransformTiny(xform0, P0, F.vert[k]);
+				XRay::Math::TransformTiny(xform1, P1, F.vert[k]);
+				XRay::Math::TransformTiny(xform2, P2, F.vert[k]);
+
 				float w0 = F.weight[k][0];
 				float w1 = F.weight[k][1];
 				P0.mul(w0);
@@ -719,8 +722,8 @@ void CKinematics::RenderWallmark(intrusive_ptr<CSkeletonWallmark> wm, FVF::LIT* 
 				Fvector PB[4];
 				for (int i = 0; i < 4; ++i)
 				{
-					Fmatrix& xform = LL_GetBoneInstance(F.bone_id[k][i]).mRenderTransform;
-					xform.transform_tiny(PB[i], F.vert[k]);
+					Matrix4x4& xform = LL_GetBoneInstance(F.bone_id[k][i]).mRenderTransform;
+					XRay::Math::TransformTiny(xform, PB[i], F.vert[k]);
 				}
 
 				float s = 0.f;
@@ -735,14 +738,14 @@ void CKinematics::RenderWallmark(intrusive_ptr<CSkeletonWallmark> wm, FVF::LIT* 
 				for (int i = 1; i < 4; ++i)
 					P.add(PB[i]);
 			}
-			wm->XFORM()->transform_tiny(V->p, P);
+			XRay::Math::TransformTiny(*wm->XFORM(), V->p, P);
 			V->t.set(F.uv[k]);
 			int			aC = iFloor(w * 255.f);	clamp(aC, 0, 255);
 			V->color = color_rgba(128, 128, 128, aC);
 			V++;
 		}
 	}
-	wm->XFORM()->transform_tiny(wm->m_Bounds.P, wm->m_LocalBounds.P);
+	XRay::Math::TransformTiny(*wm->XFORM(), wm->m_Bounds.P, wm->m_LocalBounds.P);
 }
 
 void CKinematics::ClearWallmarks()

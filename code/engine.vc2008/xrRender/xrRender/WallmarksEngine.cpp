@@ -104,7 +104,7 @@ void		CWallmarksEngine::static_wm_render		(CWallmarksEngine::static_wallmark*	W,
 	}
 }
 //--------------------------------------------------------------------------------
-void CWallmarksEngine::RecurseTri(u32 t, Fmatrix &mView, CWallmarksEngine::static_wallmark	&W)
+void CWallmarksEngine::RecurseTri(u32 t, Matrix4x4 &mView, CWallmarksEngine::static_wallmark	&W)
 {
 	CDB::TRI*	T			= sml_collector.getT()+t;
 	if (T->dummy)			return;
@@ -130,14 +130,14 @@ void CWallmarksEngine::RecurseTri(u32 t, Fmatrix &mView, CWallmarksEngine::stati
 		FVF::LIT			V0,V1,V2;
 		Fvector				UV;
 
-		mView.transform_tiny(UV, (*P)[0]);
+		XRay::Math::TransformTiny(mView, UV, (*P)[0]);
 		V0.set				((*P)[0],0,(1+UV.x)*.5f,(1-UV.y)*.5f);
-		mView.transform_tiny(UV, (*P)[1]);
+		XRay::Math::TransformTiny(mView, UV, (*P)[1]);
 		V1.set				((*P)[1],0,(1+UV.x)*.5f,(1-UV.y)*.5f);
 
 		for (u32 i=2; i<P->size(); i++)
 		{
-			mView.transform_tiny(UV, (*P)[i]);
+			XRay::Math::TransformTiny(mView, UV, (*P)[i]);
 			V2.set				((*P)[i],0,(1+UV.x)*.5f,(1-UV.y)*.5f);
 			W.verts.push_back	(V0);
 			W.verts.push_back	(V1);
@@ -162,19 +162,19 @@ void CWallmarksEngine::RecurseTri(u32 t, Fmatrix &mView, CWallmarksEngine::stati
 	}
 }
 
-void CWallmarksEngine::BuildMatrix	(Fmatrix &mView, float invsz, const Fvector& from)
+void CWallmarksEngine::BuildMatrix	(Matrix4x4 &mView, float invsz, const Fvector& from)
 {
 	// build projection
-	Fmatrix				mScale;
-    Fvector				at,up,right,y;
-	at.sub				(from,sml_normal);
-	y.set				(0,1,0);
-	if (_abs(sml_normal.y)>.99f) y.set(1,0,0);
-	right.crossproduct	(y,sml_normal);
-	up.crossproduct		(sml_normal,right);
-	mView.build_camera	(from,at,up);
-	mScale.scale		(invsz,invsz,invsz);
-	mView.mulA_43		(mScale);
+	Matrix4x4 mScale;
+	Fvector at, up, right, y;
+	at.sub(from, sml_normal);
+	y.set(0, 1, 0);
+	if (_abs(sml_normal.y) > .99f) y.set(1, 0, 0);
+	right.crossproduct(y, sml_normal);
+	up.crossproduct(sml_normal, right);
+	mView.BuildCamDir(from, at, up);
+	mScale = DirectX::XMMatrixScaling(invsz, invsz, invsz);
+	mView.Multiply43(mView, mScale);
 }
 
 void CWallmarksEngine::AddWallmark_internal	(CDB::TRI* pTri, const Fvector* pVerts, const Fvector &contact_point, ref_shader hShader, float sz)
@@ -211,15 +211,15 @@ void CWallmarksEngine::AddWallmark_internal	(CDB::TRI* pTri, const Fvector* pVer
 	sml_normal.set		(N);
 
 	// build 3D ortho-frustum
-	Fmatrix				mView,mRot;
+	Matrix4x4				mView,mRot;
 	BuildMatrix			(mView,1/sz,contact_point);
-	mRot.rotateZ		(::Random.randF(deg2rad(-20.f),deg2rad(20.f)));
-	mView.mulA_43		(mRot);
+	mRot = DirectX::XMMatrixRotationZ(::Random.randF(deg2rad(-20.f),deg2rad(20.f)));
+	mView.Multiply43(mView, mRot);
 	sml_clipper.CreateFromMatrix	(mView,FRUSTUM_P_LRTB);
 
 	// create wallmark
 	static_wallmark* W	= static_wm_allocate();
-	RecurseTri			(0, mView, *W);
+	RecurseTri(0, mView, *W);
 
 	// calc sphere
 	if (W->verts.size()<3) 
@@ -273,11 +273,11 @@ void CWallmarksEngine::AddStaticWallmark	(CDB::TRI* pTri, const Fvector* pVerts,
 	AddWallmark_internal	(pTri,pVerts,contact_point,hShader,sz);
 }
 
-void CWallmarksEngine::AddSkeletonWallmark(const Fmatrix* xf, CKinematics* obj, ref_shader& sh, const Fvector& start, const Fvector& dir, float size)
+void CWallmarksEngine::AddSkeletonWallmark(const Matrix4x4* xf, CKinematics* obj, ref_shader& sh, const Fvector& start, const Fvector& dir, float size)
 {
 	if (::RImplementation.phase != CRender::PHASE_NORMAL)				return;
 	// optimization cheat: don't allow wallmarks more than 50 m from viewer/actor
-	if (xf->c.distance_to_sqr(Device.vCameraPosition) > _sqr(50.f))				return;
+	if (CastToGSCMatrix(*xf).c.distance_to_sqr(Device.vCameraPosition) > _sqr(50.f))				return;
 
 	VERIFY(obj&&xf && (size > EPS_L));
 	xrCriticalSectionGuard guard(lock);
@@ -326,17 +326,17 @@ ICF void FlushStream(ref_geom hGeom, ref_shader shader, u32& w_offset, FVF::LIT*
 void CWallmarksEngine::Render()
 {
 	// Projection and xform
-	Fmatrix WallmarksProject = CastToGSCMatrix(Device.mProject);
+	Matrix4x4 WallmarksProject = (Device.mProject);
 
-	WallmarksProject._43			-= ps_r_WallmarkSHIFT;
-	RCache.set_xform_world		(Fidentity);
+	WallmarksProject.w[2] -= ps_r_WallmarkSHIFT;
+	RCache.set_xform_world		(DirectX::XMMatrixIdentity());
 	RCache.set_xform_project	(WallmarksProject);
 
 	Matrix4x4 mSavedView = Device.mView;
 	Fvector	mViewPos			;
 	mViewPos.mad(Device.vCameraPosition, Device.vCameraDirection, ps_r_WallmarkSHIFT_V);
 	Device.mView.BuildCamDir(mViewPos, Device.vCameraDirection, Device.vCameraTop);
-	RCache.set_xform_view		(CastToGSCMatrix(Device.mView));
+	RCache.set_xform_view		((Device.mView));
 
 	Device.Statistic->RenderDUMP_WM.Begin	();
 	Device.Statistic->RenderDUMP_WMS_Count	= 0;
@@ -430,6 +430,6 @@ void CWallmarksEngine::Render()
 
 	// Projection
 	Device.mView				= mSavedView;
-	RCache.set_xform_view		(CastToGSCMatrix(Device.mView));
-	RCache.set_xform_project	(CastToGSCMatrix(Device.mProject));
+	RCache.set_xform_view		(Device.mView);
+	RCache.set_xform_project	(Device.mProject);
 }

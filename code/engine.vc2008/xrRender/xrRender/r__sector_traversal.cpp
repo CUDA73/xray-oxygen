@@ -14,9 +14,9 @@ CPortalTraverser::CPortalTraverser	()
 xr_vector<IRender_Sector*>				dbg_sectors;
 #endif
 
-void CPortalTraverser::traverse			(IRender_Sector* start, CFrustum& F, Fvector& vBase, Fmatrix& mXFORM, u32 options)
+void CPortalTraverser::traverse			(IRender_Sector* start, CFrustum& F, Fvector& vBase, Matrix4x4& mXFORM, u32 options)
 {
-	Fmatrix			m_viewport_01	= {
+	Matrix4x4			m_viewport_01	= {
 		1.f/2.f,			0.0f,				0.0f,		0.0f,
 		0.0f,				-1.f/2.f,			0.0f,		0.0f,
 		0.0f,				0.0f,				1.0f,		0.0f,
@@ -33,7 +33,7 @@ void CPortalTraverser::traverse			(IRender_Sector* start, CFrustum& F, Fvector& 
 	i_options			= options;
 	i_vBase				= vBase;
 	i_mXFORM			= mXFORM;
-	i_mXFORM_01.mul		(m_viewport_01,mXFORM);
+	i_mXFORM_01.Multiply(mXFORM, m_viewport_01);
 	i_start				= (CSector*)start;
 	r_sectors.clear		();
 	_scissor			scissor;
@@ -119,7 +119,7 @@ void CPortalTraverser::fade_render	()
 	RCache.Vertex.Unlock			(_pcount*3,f_geom.stride());
 
 	// render
-	RCache.set_xform_world			(Fidentity);
+	RCache.set_xform_world			(DirectX::XMMatrixIdentity());
 	RCache.set_Shader				(f_shader);
 	RCache.set_Geometry				(f_geom);
 	RCache.set_CullMode				(CULL_NONE);
@@ -134,9 +134,9 @@ void CPortalTraverser::fade_render	()
 void CPortalTraverser::dbg_draw		()
 {
 	RCache.OnFrameEnd		();
-	RCache.set_xform_world	(Fidentity);
-	RCache.set_xform_view	(Fidentity);
-	RCache.set_xform_project(Fidentity);
+	RCache.set_xform_world	(DirectX::XMMatrixIdentity());
+	RCache.set_xform_view	(DirectX::XMMatrixIdentity());
+	RCache.set_xform_project(DirectX::XMMatrixIdentity());
 	for (u32 s=0; s<dbg_sectors.size(); s++)	{
 		CSector*	S		= (CSector*)dbg_sectors[s];
 		FVF::L		verts	[5];

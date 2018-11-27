@@ -30,23 +30,25 @@ void	r_pixel_calculator::end		()
 static Fvector cmNorm[6]	= {{0.f,1.f,0.f}, {0.f,1.f,0.f}, {0.f,0.f,-1.f},{0.f,0.f,1.f}, {0.f,1.f,0.f}, {0.f,1.f,0.f}};
 static Fvector cmDir[6]		= {{1.f,0.f,0.f}, {-1.f,0.f,0.f},{0.f,1.f,0.f}, {0.f,-1.f,0.f},{0.f,0.f,1.f}, {0.f,0.f,-1.f}};
 
-r_aabb_ssa		r_pixel_calculator::calculate	(dxRender_Visual* V)	{
+r_aabb_ssa		r_pixel_calculator::calculate	(dxRender_Visual* V)	
+{
 	r_aabb_ssa	result			= {0};
 	float		area			= float(_sqr(rt_dimensions));
 
 	// 
-	u32	id				[6]		;
-	for (u32 face=0; face<6; face++)	{
+	u32	id[6];
+	for (u32 face=0; face<6; face++)	
+	{
 		// setup matrices
-		Fmatrix						mProject,mView	;
+		Matrix4x4					mProject,mView	;
 		Fvector						vFrom			;
 		Fbox						aabb			;
 
 		// camera - left-to-right
-		mView.build_camera_dir		(vFrom.invert(cmDir[face]).mul(100.f),	cmDir[face],	cmNorm[face])	;
-		aabb.xform					(V->vis.box,mView);
-		D3DXMatrixOrthoOffCenterLH	( (D3DXMATRIX*)&mProject, aabb.min.x, aabb.max.x, aabb.min.y, aabb.max.y, aabb.min.z, aabb.max.z );
-		RCache.set_xform_world		(Fidentity);
+		mView.BuildCamDir(vFrom.invert(cmDir[face]).mul(100.f),	cmDir[face],	cmNorm[face])	;
+		aabb.xform(V->vis.box,mView);
+		mProject = DirectX::XMMatrixOrthographicOffCenterLH(aabb.min.x, aabb.max.x, aabb.min.y, aabb.max.y, aabb.min.z, aabb.max.z );
+		RCache.set_xform_world		(DirectX::XMMatrixIdentity());
 		RCache.set_xform_view		(mView);
 		RCache.set_xform_project	(mProject);
 

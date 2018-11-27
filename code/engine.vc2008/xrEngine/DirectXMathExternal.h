@@ -45,6 +45,12 @@ namespace XRay
 				DirectX::XMVECTOR Vect;
 
 			public:
+				inline void	div(Fvector a, const float s) 
+				{ 
+					 Vect.m128_f32[0] = a.x / s;		
+					 Vect.m128_f32[1] = a.y / s;	
+					 Vect.m128_f32[2] = a.z / s;
+				}
 
 				DirectX::XMVECTOR operator()()
 				{
@@ -66,6 +72,10 @@ namespace XRay
 					Vect = VectObj;
 				}
 
+				inline operator Fvector()
+				{
+					return Fvector().set(Vect.m128_f32[0], Vect.m128_f32[1], Vect.m128_f32[2]);
+				}
 			};
 
 		protected:
@@ -83,15 +93,15 @@ namespace XRay
 				w = Matrix.r[3];
 			}
 
-			Matrix4x4()
+			Matrix4x4(float val = 0.f)
 			{
 
 				Matrix =
 				{
-					0, 0, 0, 0,
-					0, 0, 0, 0,
-					0, 0, 0, 0,
-					0, 0, 0, 0
+					val, val, val, val,
+					val, val, val, val,
+					val, val, val, val,
+					val, val, val, val
 				};
 
 				x = Matrix.r[0];
@@ -129,11 +139,28 @@ namespace XRay
 			/// <summary>Generate new ortho projection to matrix </summary>
 			inline void BuildProjOrtho(float w, float h, float zn, float zf);
 
+			inline void Identity()
+			{
+				Matrix = DirectX::XMMatrixIdentity();
+			}
+
+			inline	void SetHPB(float h, float p, float b);
+
 			/// <summary>Multiplication matrix by matrix</summary>
 			inline void Multiply(Matrix4x4 a, Matrix4x4 b) { Matrix = DirectX::XMMatrixMultiply(a, b); }
 
+			inline void Multiply43(Matrix4x4 a, Matrix4x4 b) 
+			{ 
+				Matrix = DirectX::XMMatrixMultiply(a, b); 
+				x[3] = 0;
+				y[3] = 0;
+				z[3] = 0;
+				w[3] = 1;
+			}
+
 			/// <summary>Inversion matrix by matrix</summary>
 			inline void InvertMatrixByMatrix(const DirectX::XMMATRIX &a);
+			inline void InvertMatrixByMatrix43(const DirectX::XMMATRIX &a);
 			/// <summary>Call Fbox::xform for DirectX::XMMATRIX</summary>
 			inline void BuildXForm(Fbox &B);
 
@@ -270,6 +297,7 @@ namespace XRay
 			TransformDirByMatrix(m, res, v);
 			v.set(res);
 		}
+
 		/// <summary>GSC TransformTiny23 func for DirectX::XMMATRIX</summary>
 		inline void TransformTiny23ByMatrix(const DirectX::XMMATRIX &m, Fvector &dest, const Fvector2 &v)
 		{
@@ -278,6 +306,19 @@ namespace XRay
 			dest.z = v.x*m.r[0].m128_f32[2] + v.y*m.r[1].m128_f32[2] + m.r[3].m128_f32[2];
 		}
 
+		inline void TransformTiny(const Matrix4x4 &m, Fvector &dest, const Fvector &v) // preferred to use
+		{
+			dest.x = v.x* m.x[0] + v.y* m.y[0] + v.z* m.z[0] + m.w[0];
+			dest.y = v.x* m.x[1] + v.y* m.y[1] + v.z* m.z[1] + m.w[1];
+			dest.z = v.x* m.x[2] + v.y* m.y[2] + v.z* m.z[2] + m.w[2];
+		}
+
+		inline void TransformTiny(const Matrix4x4 &m, Fvector &v)
+		{
+			Fvector res;
+			TransformTiny(m, res, v);
+			v.set(res);
+		}
 		/// <summary>GSC TransformTiny32 func for DirectX::XMMATRIX</summary>
 		inline void TransformTiny32ByMatrix(const DirectX::XMMATRIX &m, Fvector2 &dest, const Fvector &v)
 		{
@@ -435,7 +476,38 @@ namespace XRay
 			Matrix.r[3].m128_f32[2] = -(a.r[3].m128_f32[0] * Matrix.r[0].m128_f32[2] + a.r[3].m128_f32[1] * Matrix.r[1].m128_f32[2] + a.r[3].m128_f32[2] * Matrix.r[2].m128_f32[2]);
 			Matrix.r[3].m128_f32[3] = 1.0f;
 		}
+
+		inline void Matrix4x4::InvertMatrixByMatrix43(const DirectX::XMMATRIX &a)
+		{
+			InvertMatrixByMatrix(a);
+
+			x[3] = 0;
+			y[3] = 0;
+			z[3] = 0;
+			w[3] = 1;
+		}
+
+		inline	void Matrix4x4::SetHPB(float h, float p, float b)
+		{
+			float _ch, _cp, _cb, _sh, _sp, _sb, _cc, _cs, _sc, _ss;
+
+			_sh = _sin(h); _ch = _cos(h);
+			_sp = _sin(p); _cp = _cos(p);
+			_sb = _sin(b); _cb = _cos(b);
+			_cc = _ch * _cb; _cs = _ch * _sb; _sc = _sh * _cb; _ss = _sh * _sb;
+
+			x = { _cc - _sp * _ss, -_cp * _sb, _sp*_cs + _sc,  0 };
+			y = { _sp*_sc + _cs, _cp*_cb, _ss - _sp * _cc, 0 };
+			z = { -_cp * _sh, _sp, _cp*_ch,  0 };
+			w = { 0, 0, 0, 1 };
+		}
+		inline void TransformByMatrix(const Matrix4x4& m,Fvector &v)
+		{
+			Fvector res;
+			TransformVectorsByMatrix(m, res, v);
+			v.set(res);
+		}
 	}
 };
 
-using Matrix4x4 = XRay::Math::Matrix4x4;
+using XRay::Math::Matrix4x4;

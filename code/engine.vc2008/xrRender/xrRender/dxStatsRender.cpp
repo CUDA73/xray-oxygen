@@ -58,7 +58,7 @@ void dxStatsRender::SetDrawParams (IRenderDeviceRender *pRender)
 {
 	dxRenderDeviceRender *pR = (dxRenderDeviceRender*) pRender;
 
-	RCache.set_xform_world  (Fidentity);
+	RCache.set_xform_world  (DirectX::XMMatrixIdentity());
 	RCache.set_Shader		(pR->m_SelectionShader);
 	RCache.set_c			("tfactor",1,1,1,1);
 }

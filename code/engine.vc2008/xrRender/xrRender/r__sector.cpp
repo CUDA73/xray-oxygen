@@ -36,7 +36,7 @@ void CPortal::OnRender	()
 		C.div				((float)poly.size());
 		V[0].set			(C,0x800000FF);
 
-		RCache.set_xform_world(Fidentity);
+		RCache.set_xform_world(DirectX::XMMatrixIdentity());
 		// draw solid
 		RCache.set_Shader	(dxRenderDeviceRender::Instance().m_SelectionShader);
 		RCache.dbg_Draw		(D3DPT_TRIANGLEFAN,&*V.begin(),V.size()-2);
@@ -164,13 +164,13 @@ void CSector::traverse			(CFrustum &F, _scissor& R_scissor)
 			sPoly&	p	= *P;
 			for		(u32 vit=0; vit<p.size(); vit++)	{
 				Fvector4	t;	
-				Fmatrix&	M	= PortalTraverser.i_mXFORM_01;
+				Matrix4x4&	M	= PortalTraverser.i_mXFORM_01;
 				Fvector&	v	= p[vit];
 
-				t.x = v.x*M._11 + v.y*M._21 + v.z*M._31 + M._41;
-				t.y = v.x*M._12 + v.y*M._22 + v.z*M._32 + M._42;
-				t.z = v.x*M._13 + v.y*M._23 + v.z*M._33 + M._43;
-				t.w = v.x*M._14 + v.y*M._24 + v.z*M._34 + M._44;
+				t.x = v.x*M.x[0] + v.y*M.y[0] + v.z*M.z[0] + M.w[0];
+				t.y = v.x*M.x[1] + v.y*M.y[1] + v.z*M.z[1] + M.w[1];
+				t.z = v.x*M.x[2] + v.y*M.y[2] + v.z*M.z[2] + M.w[2];
+				t.w = v.x*M.x[3] + v.y*M.y[3] + v.z*M.z[3] + M.w[3];
 				t.mul	(1.f/t.w);
 
 				if (t.x < bb.min.x)	bb.min.x	= t.x; 
@@ -218,7 +218,7 @@ void CSector::traverse			(CFrustum &F, _scissor& R_scissor)
 
 		// Create _new_ frustum and recurse
 		CFrustum				Clip;
-		Clip.CreateFromPortal	(P, PORTAL->P.n, PortalTraverser.i_vBase,PortalTraverser.i_mXFORM);
+		Clip.CreateFromPortal	(P, PORTAL->P.n, PortalTraverser.i_vBase, PortalTraverser.i_mXFORM);
 		PORTAL->marker			= PortalTraverser.i_marker;
 		PORTAL->bDualRender		= FALSE;
 		pSector->traverse		(Clip,scissor);

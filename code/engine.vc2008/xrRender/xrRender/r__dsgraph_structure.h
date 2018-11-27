@@ -21,7 +21,7 @@ class	R_dsgraph_structure										: public IRender_interface, public pureFrame
 {
 public:
 	IRenderable*												val_pObject;
-	Fmatrix*													val_pTransform;
+	Matrix4x4*													val_pTransform;
 	BOOL														val_bHUD;
 	BOOL														val_bInvisible;
 	BOOL														val_bRecordMP;		// record nearest for multi-pass
@@ -80,7 +80,7 @@ public:
 	u32															counter_D	;
 	BOOL														b_loaded	;
 public:
-	virtual		void					set_Transform			(Fmatrix*	M	)				{ VERIFY(M);	val_pTransform = M;	}
+	virtual		void					set_Transform			(Matrix4x4*	M	)				{ VERIFY(M);	val_pTransform = M;	}
 	virtual		void					set_HUD					(BOOL 		V	)				{ val_bHUD		= V;				}
 	virtual		BOOL					get_HUD					()								{ return		val_bHUD;			}
 	virtual		void					set_Invisible			(BOOL 		V	)				{ val_bInvisible= V;				}
@@ -155,8 +155,8 @@ public:
 	void		r_dsgraph_render_emissive						();
 	void		r_dsgraph_render_wmarks							();
 	void		r_dsgraph_render_distort						();
-	void		r_dsgraph_render_subspace						(IRender_Sector* _sector, CFrustum* _frustum, Fmatrix& mCombined, Fvector& _cop, BOOL _dynamic, BOOL _precise_portals=FALSE	);
-	void		r_dsgraph_render_subspace						(IRender_Sector* _sector, Fmatrix& mCombined, Fvector& _cop, BOOL _dynamic, BOOL _precise_portals=FALSE	);
+	void		r_dsgraph_render_subspace						(IRender_Sector* _sector, CFrustum* _frustum, Matrix4x4& mCombined, Fvector& _cop, BOOL _dynamic, BOOL _precise_portals=FALSE	);
+	void		r_dsgraph_render_subspace						(IRender_Sector* _sector, Matrix4x4& mCombined, Fvector& _cop, BOOL _dynamic, BOOL _precise_portals=FALSE	);
 	void		r_dsgraph_render_R1_box							(IRender_Sector* _sector, Fbox& _bb, int _element);
 
 

@@ -8,8 +8,8 @@ void CRenderTarget::accum_point		(light* L)
 	ref_shader		shader			= L->s_point;
 	if (!shader)	shader			= s_accum_point;
 
-	Matrix4x4 Pold=  *(Matrix4x4*)&Fidentity;
-	Matrix4x4 FTold= *(Matrix4x4*)&Fidentity;
+	Matrix4x4 Pold=  *(Matrix4x4*)&DirectX::XMMatrixIdentity();
+	Matrix4x4 FTold= *(Matrix4x4*)&DirectX::XMMatrixIdentity();
 
 	if (L->flags.bHudMode)
 	{

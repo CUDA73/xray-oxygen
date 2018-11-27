@@ -80,15 +80,15 @@ void CRenderTarget::phase_combine()
 #endif
 
 	// calc m-blur matrices
-	Fmatrix m_previous, m_current;
+	Matrix4x4 m_previous, m_current;
 	Fvector2 m_blur_scale;
 	{
-		static Fmatrix m_saved_viewproj;
+		static Matrix4x4 m_saved_viewproj;
 		
 		// (new-camera) -> (world) -> (old_viewproj)
-		m_previous.mul		(m_saved_viewproj, RCache.xforms.m_invv);
-		m_current.set		(CastToGSCMatrix(Device.mProject));
-		m_saved_viewproj.set(CastToGSCMatrix(Device.mFullTransform));
+		m_previous.Multiply		(m_saved_viewproj, RCache.xforms.m_invv);
+		m_current = Device.mProject;
+		m_saved_viewproj = Device.mFullTransform;
 		float scale			= ps_r_mblur / 2.0f;
 		m_blur_scale.set	(scale, -scale).div(12.0f);
 	}
@@ -448,8 +448,8 @@ void CRenderTarget::phase_combine()
 		p1.mad				(zero,L_right,sz).mad	(L_dir,-sz);
 		p2.mad				(zero,L_right,-sz).mad	(L_dir,-sz);
 		p3.mad				(zero,L_right,-sz).mad	(L_dir,+sz);
-		RCache.dbg_DrawTRI	(Fidentity,p0,p1,p2,0xffffffff);
-		RCache.dbg_DrawTRI	(Fidentity,p2,p3,p0,0xffffffff);
+		RCache.dbg_DrawTRI	(DirectX::XMMatrixIdentity(),p0,p1,p2,0xffffffff);
+		RCache.dbg_DrawTRI	(DirectX::XMMatrixIdentity(),p2,p3,p0,0xffffffff);
 	}
 
 	static	xr_vector<dbg_line_t>	saved_dbg_lines;
@@ -469,7 +469,7 @@ void CRenderTarget::phase_combine()
 #endif
 	for (u32 it=0; it<dbg_lines.size(); it++)
 	{
-		RCache.dbg_DrawLINE		(Fidentity,dbg_lines[it].P0,dbg_lines[it].P1,dbg_lines[it].color);
+		RCache.dbg_DrawLINE		(DirectX::XMMatrixIdentity(),dbg_lines[it].P0,dbg_lines[it].P1,dbg_lines[it].color);
 	}
 
 	dbg_spheres.clear	();

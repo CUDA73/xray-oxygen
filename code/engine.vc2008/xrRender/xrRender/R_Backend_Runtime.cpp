@@ -161,7 +161,7 @@ void	CBackend::set_ClipPlanes	(u32 _enable, Fplane*	_planes /*=NULL */, u32 coun
 #endif
 }
 
-void	CBackend::set_ClipPlanes	(u32 _enable, Fmatrix*	_xform  /*=NULL */, u32 fmask/* =0xff */)
+void	CBackend::set_ClipPlanes	(u32 _enable, Matrix4x4*	_xform  /*=NULL */, u32 fmask/* =0xff */)
 {
 	if (0==HW.Caps.geometry.dwClipPlanes)	return;
 	if (!_enable)	{

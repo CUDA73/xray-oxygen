@@ -1,4 +1,7 @@
 #pragma once
+
+
+
 //------------------------------------------------------------------------------
 // calculate
 //------------------------------------------------------------------------------
@@ -208,46 +211,47 @@ IC void keys_substruct(CKey	*R, const CKey	*BR, int b_count )
 		R[i] = r;
 	}
 }
-
-IC void q_scalem(Fmatrix &m, float v)
+ 
+IC void q_scalem(Matrix4x4 &m, float v)
 {
 	Fquaternion q;
 	q.set(m);
 	q_scale(q,v);
-	m.rotation(q);
+	m = DirectX::XMMatrixRotationQuaternion({ q.x, q.y, q.z, q.w });
 }
 
 //sclale base' * q by scale_factor returns result in matrix  m_res
-IC void q_scale_vs_basem(Fmatrix &m_res,const Fquaternion &q, const Fquaternion &base,float scale_factor)
+IC void q_scale_vs_basem(Matrix4x4 &m_res,const Fquaternion &q, const Fquaternion &base,float scale_factor)
 {
-	Fmatrix mb,imb;
-	mb.rotation(base);
-	imb.invert(mb);
+	Matrix4x4 mb,imb;
+	mb = DirectX::XMMatrixRotationQuaternion({ base.x, base.y, base.z, base.w });
+	imb.InvertMatrixByMatrix(mb);
 
-	Fmatrix m;m.rotation(q);
-	m_res.mul(imb,m);
+	Matrix4x4 m;m = DirectX::XMMatrixRotationQuaternion({ q.x, q.y, q.z, q.w });
+	m_res.Multiply(m, imb);
 	q_scalem(m_res,scale_factor);
 }
 
 
 IC void q_add_scaled_basem( Fquaternion &q, const Fquaternion &base, const Fquaternion &q0, const Fquaternion &q1, float v1 )
 {
-	Fmatrix m0;m0.rotation(q0);
-	Fmatrix m,ml1;
+	Matrix4x4 m0 = DirectX::XMMatrixRotationQuaternion({ q0.x, q0.y, q0.z, q0.w });
+	Matrix4x4 m,ml1;
 	q_scale_vs_basem( ml1, q1, base, v1 );
-	m.mul(m0,ml1);
+	m.Multiply(ml1, m0);
 	q.set(m);
 	q.normalize();
 }
 
-IC float DET(const Fmatrix &a){
+IC float DET(const Matrix4x4 &a)
+{
 	return
-		(( a._11 * ( a._22 * a._33 - a._23 * a._32 ) -
-		a._12 * ( a._21 * a._33 - a._23 * a._31 ) +
-		a._13 * ( a._21 * a._32 - a._22 * a._31 ) ));
+		((a.x[0] * (a.y[1] * a.z[2] - a.y[2] * a.z[1]) -
+			a.x[1] * (a.y[0] * a.z[2] - a.y[2] * a.z[0]) +
+			a.x[2] * (a.y[0] * a.z[1] - a.y[1] * a.z[0])));
 }
 
-IC bool check_scale(const Fmatrix &m)
+IC bool check_scale(const Matrix4x4 &m)
 {
 	float det = DET(m);
 	return (0.8f<det&&det<1.3f);
@@ -255,8 +259,7 @@ IC bool check_scale(const Fmatrix &m)
 
 IC bool check_scale(const Fquaternion &q)
 {
-	Fmatrix m;
-	m.rotation(q);
+	Matrix4x4 m = DirectX::XMMatrixRotationQuaternion({ q.x, q.y, q.z, q.w });
 	return check_scale(m);
 }
 

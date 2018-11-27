@@ -11,12 +11,12 @@ using namespace PS;
 const u32	PS::uDT_STEP = 33;
 const float	PS::fDT_STEP = float(uDT_STEP) / 1000.f;
 
-static void ApplyTexgen(const Fmatrix &mVP)
+static void ApplyTexgen(const Matrix4x4 &mVP)
 {
-	Fmatrix mTexgen;
+	Matrix4x4 mTexgen;
 
 #ifdef USE_DX11
-	Fmatrix			mTexelAdjust =
+	Matrix4x4			mTexelAdjust =
 	{
 		0.5f,				0.0f,				0.0f,			0.0f,
 		0.0f,				-0.5f,				0.0f,			0.0f,
@@ -28,7 +28,7 @@ static void ApplyTexgen(const Fmatrix &mVP)
 	float	_h = float(RDEVICE.dwHeight);
 	float	o_w = (.5f / _w);
 	float	o_h = (.5f / _h);
-	Fmatrix			mTexelAdjust =
+	Matrix4x4			mTexelAdjust =
 	{
 		0.5f,				0.0f,				0.0f,			0.0f,
 		0.0f,				-0.5f,				0.0f,			0.0f,
@@ -37,7 +37,7 @@ static void ApplyTexgen(const Fmatrix &mVP)
 	};
 #endif
 
-	mTexgen.mul(mTexelAdjust, mVP);
+	mTexgen.Multiply(mVP, mTexelAdjust);
 	RCache.set_c("mVPTexgen", mTexgen);
 }
 
@@ -67,7 +67,7 @@ CParticleEffect::CParticleEffect()
 	m_InitialPosition.set(0, 0, 0);
 	m_DestroyCallback = 0;
 	m_CollisionCallback = 0;
-	m_XFORM.identity();
+	m_XFORM.Identity();
 }
 CParticleEffect::~CParticleEffect()
 {
@@ -98,12 +98,12 @@ void CParticleEffect::RefreshShader()
 	OnDeviceCreate();
 }
 
-void CParticleEffect::UpdateParent(const Fmatrix& m, const Fvector& velocity, BOOL bXFORM)
+void CParticleEffect::UpdateParent(const Matrix4x4& m, const Fvector& velocity, BOOL bXFORM)
 {
 	m_RT_Flags.set(flRT_XFORM, bXFORM);
-	if (bXFORM)				m_XFORM.set(m);
+	if (bXFORM)				m_XFORM = m;
 	else {
-		m_InitialPosition = m.c;
+		m_InitialPosition = { m.w[0], m.w[1], m.w[2] };
 		ParticleManager()->Transform(m_HandleActionList, m, velocity);
 	}
 }
@@ -447,32 +447,36 @@ void ParticleRenderStream(LPVOID lpvParams)
 			if (!speed_calculated)
 				magnitude_sse(m.vel, speed);
 			if ((speed < EPS_S) && pPE.m_Def->m_Flags.is(CPEDef::dfWorldAlign)) {
-				Fmatrix	M;
-				M.setXYZ(pPE.m_Def->m_APDefaultRotation);
+				Matrix4x4	M;
+				M.SetHPB(-pPE.m_Def->m_APDefaultRotation.x, -pPE.m_Def->m_APDefaultRotation.y, -pPE.m_Def->m_APDefaultRotation.z);
 				if (pPE.m_RT_Flags.is(CParticleEffect::flRT_XFORM)) {
 					Fvector p;
-					pPE.m_XFORM.transform_tiny(p, m.pos);
-					M.mulA_43(pPE.m_XFORM);
-					FillSprite(pv, M.k, M.i, p, lt, rb, r_x, r_y, m.color, sina, cosa);
+					XRay::Math::TransformTiny(pPE.m_XFORM, p, m.pos);
+					M.Multiply43(M, pPE.m_XFORM);
+					FillSprite(pv, M.z, M.x, p, lt, rb, r_x, r_y, m.color, sina, cosa);
 				}
 				else {
-					FillSprite(pv, M.k, M.i, m.pos, lt, rb, r_x, r_y, m.color, sina, cosa);
+					FillSprite(pv, M.z, M.x, m.pos, lt, rb, r_x, r_y, m.color, sina, cosa);
 				}
 			}
-			else if ((speed >= EPS_S) && pPE.m_Def->m_Flags.is(CPEDef::dfFaceAlign)) {
-				Fmatrix	M;  		M.identity();
-				M.k.div(m.vel, speed);
-				M.j.set(0, 1, 0);	if (_abs(M.j.dotproduct(M.k)) > .99f)  M.j.set(0, 0, 1);
-				M.i.crossproduct(M.j, M.k);	M.i.normalize();
-				M.j.crossproduct(M.k, M.i);	M.j.normalize();
-				if (pPE.m_RT_Flags.is(CParticleEffect::flRT_XFORM)) {
+			else if ((speed >= EPS_S) && pPE.m_Def->m_Flags.is(CPEDef::dfFaceAlign)) 
+			{
+				Matrix4x4	M;
+				M.Identity();
+
+				M.x.div(m.vel, speed);
+				M.y = { (0, 1, 0, M.y[3]) };	if (_abs(CastToGSCMatrix(M).j.dotproduct(M.z)) > .99f)  M.x = { (0, 0, 1, M.x[3]) };
+				CastToGSCMatrix(M).i.crossproduct(M.x, M.z);
+				CastToGSCMatrix(M).j.crossproduct(M.z, M.x);
+				if (pPE.m_RT_Flags.is(CParticleEffect::flRT_XFORM)) 
+				{
 					Fvector p;
-					pPE.m_XFORM.transform_tiny(p, m.pos);
-					M.mulA_43(pPE.m_XFORM);
-					FillSprite(pv, M.j, M.i, p, lt, rb, r_x, r_y, m.color, sina, cosa);
+					XRay::Math::TransformTiny(pPE.m_XFORM, p, m.pos);
+					M.Multiply43(M, pPE.m_XFORM);
+					FillSprite(pv, M.z, M.x, p, lt, rb, r_x, r_y, m.color, sina, cosa);
 				}
 				else {
-					FillSprite(pv, M.j, M.i, m.pos, lt, rb, r_x, r_y, m.color, sina, cosa);
+					FillSprite(pv, M.y, M.x, m.pos, lt, rb, r_x, r_y, m.color, sina, cosa);
 				}
 			}
 			else {
@@ -481,8 +485,8 @@ void ParticleRenderStream(LPVOID lpvParams)
 				else				dir.setHP(-pPE.m_Def->m_APDefaultRotation.y, -pPE.m_Def->m_APDefaultRotation.x);
 				if (pPE.m_RT_Flags.is(CParticleEffect::flRT_XFORM)) {
 					Fvector p, d;
-					pPE.m_XFORM.transform_tiny(p, m.pos);
-					pPE.m_XFORM.transform_dir(d, dir);
+					XRay::Math::TransformTiny(pPE.m_XFORM, p, m.pos);
+					XRay::Math::TransformDirByMatrix(pPE.m_XFORM, d, dir);
 					FillSprite(pv, p, d, lt, rb, r_x, r_y, m.color, sina, cosa);
 				}
 				else {
@@ -493,7 +497,7 @@ void ParticleRenderStream(LPVOID lpvParams)
 		else {
 			if (pPE.m_RT_Flags.is(CParticleEffect::flRT_XFORM)) {
 				Fvector p;
-				pPE.m_XFORM.transform_tiny(p, m.pos);
+				XRay::Math::TransformTiny(pPE.m_XFORM, p, m.pos);
 				FillSprite(pv, RDEVICE.vCameraTop, RDEVICE.vCameraRight, p, lt, rb, r_x, r_y, m.color, sina, cosa);
 			}
 			else {
@@ -559,7 +563,7 @@ void CParticleEffect::Render(float)
 					ApplyTexgen(Device.mFullTransform);
 				}
 
-				RCache.set_xform_world(Fidentity);
+				RCache.set_xform_world(DirectX::XMMatrixIdentity());
 				RCache.set_Geometry(geom);
 
 				RCache.set_CullMode(m_Def->m_Flags.is(CPEDef::dfCulling) ? (m_Def->m_Flags.is(CPEDef::dfCullCCW) ? CULL_CCW : CULL_CW) : CULL_NONE);
@@ -571,8 +575,8 @@ void CParticleEffect::Render(float)
 					RImplementation.rmNormal();
 					Device.mProject = Pold;
 					Device.mFullTransform = FTold;
-					RCache.set_xform_project(CastToGSCMatrix(Device.mProject));
-					ApplyTexgen(CastToGSCMatrix(Device.mFullTransform));
+					RCache.set_xform_project((Device.mProject));
+					ApplyTexgen((Device.mFullTransform));
 				}
 			}
 		}

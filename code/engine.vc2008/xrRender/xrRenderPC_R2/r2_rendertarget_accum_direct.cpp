@@ -103,7 +103,7 @@ void CRenderTarget::accum_direct		(u32 sub_phase)
 		//float			fBias				= (SE_SUN_NEAR==sub_phase)?ps_r_sun_depth_near_bias:ps_r_sun_depth_far_bias;
 		//	Use this when triangle culling is not inverted.
 		float			fBias				= (SE_SUN_NEAR==sub_phase)?(-ps_r_sun_depth_near_bias):ps_r_sun_depth_far_bias;
-		Fmatrix			m_TexelAdjust		= 
+		Matrix4x4			m_TexelAdjust		= 
 		{
 			0.5f,				0.0f,				0.0f,			0.0f,
 			0.0f,				-0.5f,				0.0f,			0.0f,
@@ -113,41 +113,43 @@ void CRenderTarget::accum_direct		(u32 sub_phase)
 
 		// compute xforms
 		FPU::m64r			();
-		Fmatrix				xf_invview;		xf_invview.invert	(CastToGSCMatrix(Device.mView))	;
+		Matrix4x4				xf_invview;		xf_invview.InvertMatrixByMatrix	(Device.mView);
 
 		// shadow xform
-		Fmatrix				m_shadow;
+		Matrix4x4				m_shadow;
 		{
-			Fmatrix			xf_project;		xf_project.mul		(m_TexelAdjust,fuckingsun->X.D.combine);
-			m_shadow.mul	(xf_project,	xf_invview);
+			Matrix4x4			xf_project;		xf_project.Multiply(fuckingsun->X.D.combine, m_TexelAdjust);
+			m_shadow.Multiply(xf_project, xf_invview);
 
 			// tsm-bias
-			if ( (SE_SUN_FAR == sub_phase) && (RImplementation.o.HW_smap) )
+			if ((SE_SUN_FAR == sub_phase) && (RImplementation.o.HW_smap))
 			{
-				Fvector		bias;	bias.mul		(L_dir,ps_r_sun_tsm_bias);
-				Fmatrix		bias_t;	bias_t.translate(bias);
-				m_shadow.mulB_44	(bias_t);
+				Fvector		bias;	bias.mul(L_dir, ps_r_sun_tsm_bias);
+				Matrix4x4		bias_t;	bias_t.Translate(bias);
+				m_shadow.Multiply(bias_t, m_shadow);
 			}
-			FPU::m24r		();
+			FPU::m24r();
 		}
 
 		// clouds xform
-		Fmatrix				m_clouds_shadow;
+		Matrix4x4				m_clouds_shadow;
 		{
 			static	float	w_shift		= 0;
-			Fmatrix			m_xform;
+			Matrix4x4			m_xform;
 			Fvector			direction	= fuckingsun->direction	;
 			float	w_dir				= Environment().CurrentEnv->wind_direction	;
 			Fvector			normal	;	normal.setHP(w_dir,0);
 							w_shift		+=	0.003f*Device.fTimeDelta;
 			Fvector			position;	position.set(0,0,0);
-			m_xform.build_camera_dir	(position,direction,normal)	;
-			Fvector			localnormal;m_xform.transform_dir(localnormal,normal); localnormal.normalize();
-			m_clouds_shadow.mul			(m_xform,xf_invview)		;
-			m_xform.scale				(0.002f,0.002f,1.f)			;
-			m_clouds_shadow.mulA_44		(m_xform)					;
-			m_xform.translate			(localnormal.mul(w_shift))	;
-			m_clouds_shadow.mulA_44		(m_xform)					;
+			m_xform.BuildCamDir	(position,direction,normal)	;
+			Fvector			localnormal;
+			XRay::Math::TransformDirByMatrix(m_xform, localnormal, normal);
+			localnormal.normalize();
+			m_clouds_shadow.Multiply(xf_invview, m_xform)		;
+			m_xform = DirectX::XMMatrixScaling				(0.002f,0.002f,1.f)			;
+			m_clouds_shadow.Multiply(m_clouds_shadow, m_xform)					;
+			m_xform.Translate			(localnormal.mul(w_shift))	;
+			m_clouds_shadow.Multiply(m_clouds_shadow, m_xform)					;
 		}
 
 		// Make jitter texture
@@ -224,7 +226,7 @@ void CRenderTarget::accum_direct		(u32 sub_phase)
 	}
 }
 
-void CRenderTarget::accum_direct_cascade	( u32 sub_phase, Fmatrix& xform, Fmatrix& xform_prev, float fBias )
+void CRenderTarget::accum_direct_cascade	( u32 sub_phase, Matrix4x4& xform, Matrix4x4& xform_prev, float fBias )
 {
 	// Choose normal code-path or filtered
 	phase_accumulator					();
@@ -232,7 +234,7 @@ void CRenderTarget::accum_direct_cascade	( u32 sub_phase, Fmatrix& xform, Fmatri
 		accum_direct_f	(sub_phase);
 		return			;
 	}
-	Fmatrix mView = CastToGSCMatrix(Device.mView);
+	Matrix4x4 mView = (Device.mView);
 
 	// *** assume accumulator setted up ***
 	light*			fuckingsun			= (light*)RImplementation.Lights.sun._get()	;
@@ -251,7 +253,8 @@ void CRenderTarget::accum_direct_cascade	( u32 sub_phase, Fmatrix& xform, Fmatri
 	Fvector		L_dir,L_clr;	float L_spec;
 	L_clr.set					(fuckingsun->color.r,fuckingsun->color.g,fuckingsun->color.b);
 	L_spec						= u_diffuse2s	(L_clr);
-	mView.transform_dir	(L_dir,fuckingsun->direction);
+
+	XRay::Math::TransformDirByMatrix(mView, L_dir, fuckingsun->direction);
 	L_dir.normalize				();
 
 	// Perform masking (only once - on the first/near phase)
@@ -299,7 +302,7 @@ void CRenderTarget::accum_direct_cascade	( u32 sub_phase, Fmatrix& xform, Fmatri
 		float			fRange				= (SE_SUN_NEAR==sub_phase)?ps_r_sun_depth_near_scale:ps_r_sun_depth_far_scale;
 		//	Use this when triangle culling is not inverted.
 //		float			fBias				= (SE_SUN_NEAR==sub_phase)?(-ps_r_sun_depth_near_bias):ps_r_sun_depth_far_bias;
-		Fmatrix			m_TexelAdjust		= 
+		Matrix4x4			m_TexelAdjust		= 
 		{
 			0.5f,				0.0f,				0.0f,			0.0f,
 			0.0f,				-0.5f,				0.0f,			0.0f,
@@ -309,48 +312,50 @@ void CRenderTarget::accum_direct_cascade	( u32 sub_phase, Fmatrix& xform, Fmatri
 
 		// compute xforms
 		FPU::m64r			();
-		Fmatrix				xf_invview;		xf_invview.invert	(mView)	;
+		Matrix4x4				xf_invview;		xf_invview.InvertMatrixByMatrix	(mView)	;
 
 		// shadow xform
-		Fmatrix				m_shadow;
+		Matrix4x4				m_shadow;
 		{
-			Fmatrix			xf_project;		xf_project.mul		(m_TexelAdjust,fuckingsun->X.D.combine);
-			m_shadow.mul	(xf_project,	xf_invview);
+			Matrix4x4			xf_project;		xf_project.Multiply		(fuckingsun->X.D.combine, m_TexelAdjust);
+			m_shadow.Multiply	(xf_invview, xf_project);
 
 			// tsm-bias
 			if ( (SE_SUN_FAR == sub_phase) && (RImplementation.o.HW_smap) )
 			{
 				Fvector		bias;	bias.mul		(L_dir,ps_r_sun_tsm_bias);
-				Fmatrix		bias_t;	bias_t.translate(bias);
-				m_shadow.mulB_44	(bias_t);
+				Matrix4x4		bias_t;	bias_t.Translate(bias);
+				m_shadow.Multiply	(bias_t, m_shadow);
 			}
 			FPU::m24r		();
 		}
 
 		// clouds xform
-		Fmatrix				m_clouds_shadow;
+		Matrix4x4				m_clouds_shadow;
 		{
 			static	float	w_shift		= 0;
-			Fmatrix			m_xform;
+			Matrix4x4			m_xform;
 			Fvector			direction	= fuckingsun->direction	;
 			float	w_dir				= Environment().CurrentEnv->wind_direction	;
 			Fvector			normal	;	normal.setHP(w_dir,0);
 							w_shift		+=	0.003f*Device.fTimeDelta;
 			Fvector			position;	position.set(0,0,0);
-			m_xform.build_camera_dir	(position,direction,normal)	;
-			Fvector			localnormal;m_xform.transform_dir(localnormal,normal); localnormal.normalize();
-			m_clouds_shadow.mul			(m_xform,xf_invview)		;
-			m_xform.scale				(0.002f,0.002f,1.f)			;
-			m_clouds_shadow.mulA_44		(m_xform)					;
-			m_xform.translate			(localnormal.mul(w_shift))	;
-			m_clouds_shadow.mulA_44		(m_xform)					;
+			m_xform.BuildCamDir	(position,direction,normal)	;
+			Fvector			localnormal;
+			XRay::Math::TransformDirByMatrix(m_xform, localnormal, normal);
+			localnormal.normalize();
+			m_clouds_shadow.Multiply(xf_invview, m_xform)		;
+			m_xform = DirectX::XMMatrixScaling(0.002f,0.002f,1.f)			;
+			m_clouds_shadow.Multiply(m_clouds_shadow, m_xform);
+			m_xform.Translate			(localnormal.mul(w_shift))	;
+			m_clouds_shadow.Multiply(m_clouds_shadow, m_xform);
 		}
 
-		Fmatrix			m_Texgen;
-		m_Texgen.identity();
+		Matrix4x4			m_Texgen;
+		m_Texgen.Identity();
  		RCache.xforms.set_W( m_Texgen );
- 		RCache.xforms.set_V( CastToGSCMatrix(Device.mView ));
- 		RCache.xforms.set_P( CastToGSCMatrix(Device.mProject ));
+ 		RCache.xforms.set_V( (Device.mView ));
+ 		RCache.xforms.set_P( (Device.mProject ));
  		u_compute_texgen_screen	( m_Texgen );
 
 		// Make jitter texture
@@ -373,17 +378,17 @@ void CRenderTarget::accum_direct_cascade	( u32 sub_phase, Fmatrix& xform, Fmatri
 			FVF::L* pv				= (FVF::L*)	RCache.Vertex.Lock	( ver_count,g_combine_cuboid.stride(),Offset);
 			
 
-			Fmatrix inv_XDcombine;
+			Matrix4x4 inv_XDcombine;
 			if(sub_phase == SE_SUN_FAR )
-				inv_XDcombine.invert(xform_prev);
+				inv_XDcombine.InvertMatrixByMatrix(xform_prev);
 			else
-				inv_XDcombine.invert(xform);
+				inv_XDcombine.InvertMatrixByMatrix(xform);
 				
 
 			for ( u32 i = 0; i < ver_count; ++i )
 			{
 				Fvector3 tmp_vec;
-				inv_XDcombine.transform(tmp_vec, corners[i]);
+				XRay::Math::TransformDirByMatrix(inv_XDcombine, tmp_vec, corners[i]);
 				pv->set						(tmp_vec, C);	
 				pv++;
 			}
@@ -406,15 +411,15 @@ void CRenderTarget::accum_direct_cascade	( u32 sub_phase, Fmatrix& xform, Fmatri
 		if(sub_phase == SE_SUN_FAR)
 		{
 			Fvector3 view_viewspace;	view_viewspace.set( 0, 0, 1 );
-			
-			m_shadow.transform_dir( view_viewspace );
+
+			XRay::Math::TransformDirByMatrix(m_shadow, view_viewspace);
 			Fvector4 view_projlightspace;
 			view_projlightspace.set( view_viewspace.x, view_viewspace.y, 0, 0 );
 			view_projlightspace.normalize();
 
 			RCache.set_c				("view_shadow_proj",	view_projlightspace);
 		}
-		Fmatrix &mTransform = CastToGSCMatrix(Device.mFullTransform);
+		Matrix4x4 &mTransform = (Device.mFullTransform);
 		// nv-DBT
 		float zMin,zMax;
 		if (SE_SUN_NEAR==sub_phase)
@@ -427,13 +432,14 @@ void CRenderTarget::accum_direct_cascade	( u32 sub_phase, Fmatrix& xform, Fmatri
 			zMin = ps_r_sun_near;
 			zMax = ps_r_sun_far;
 		}
-		center_pt.mad(Device.vCameraPosition,Device.vCameraDirection,zMin);	mTransform.transform	(center_pt);
+		center_pt.mad(Device.vCameraPosition,Device.vCameraDirection,zMin);	TransformByMatrix(mTransform, center_pt);
 		zMin = center_pt.z	;
 
-		center_pt.mad(Device.vCameraPosition,Device.vCameraDirection,zMax);	mTransform.transform	(center_pt);
+		center_pt.mad(Device.vCameraPosition,Device.vCameraDirection,zMax);	TransformByMatrix(mTransform, center_pt);
 		zMax = center_pt.z	;
 
-		if (u_DBT_enable(zMin,zMax))	{
+		if (u_DBT_enable(zMin,zMax))	
+		{
 			// z-test always
 			HW.pDevice->SetRenderState(D3DRS_ZFUNC, D3DCMP_ALWAYS);
 			HW.pDevice->SetRenderState(D3DRS_ZWRITEENABLE, FALSE);
@@ -536,14 +542,14 @@ void CRenderTarget::accum_direct_f		(u32 sub_phase)
 	p1.set						((_w+.5f)/_w, (_h+.5f)/_h );
 	float	d_Z	= EPS_S, d_W = 1.f;
 
-	Fmatrix mView = CastToGSCMatrix(Device.mView);
-	Fmatrix mFullTransform = CastToGSCMatrix(Device.mFullTransform);
+	Matrix4x4 &mView = (Device.mView);
+	Matrix4x4 &mFullTransform = (Device.mFullTransform);
 
 	// Common constants (light-related)
 	Fvector		L_dir,L_clr;	float L_spec;
 	L_clr.set					(fuckingsun->color.r,fuckingsun->color.g,fuckingsun->color.b);
 	L_spec						= u_diffuse2s	(L_clr);
-	mView.transform_dir	(L_dir,fuckingsun->direction);
+	XRay::Math::TransformDirByMatrix(mView, L_dir,fuckingsun->direction);
 	L_dir.normalize				();
 
 	// Perform masking (only once - on the first/near phase)
@@ -577,7 +583,9 @@ void CRenderTarget::accum_direct_f		(u32 sub_phase)
 
 	// recalculate d_Z, to perform depth-clipping
 	Fvector	center_pt;			center_pt.mad	(Device.vCameraPosition,Device.vCameraDirection,ps_r_sun_near);
-	mFullTransform.transform(center_pt)	;
+	Fvector desc;
+	XRay::Math::TransformVectorsByMatrix(mFullTransform, desc, center_pt)	;
+	center_pt.set(desc);
 	d_Z							= center_pt.z	;
 
 	// nv-stencil recompression
@@ -593,7 +601,7 @@ void CRenderTarget::accum_direct_f		(u32 sub_phase)
 		float			fTexelOffs			= (.5f / float(RImplementation.o.smapsize));
 		float			fRange				= (SE_SUN_NEAR==sub_phase)?ps_r_sun_depth_near_scale:ps_r_sun_depth_far_scale;
 		float			fBias				= (SE_SUN_NEAR==sub_phase)?ps_r_sun_depth_near_bias:ps_r_sun_depth_far_bias;
-		Fmatrix			m_TexelAdjust		= 
+		Matrix4x4			m_TexelAdjust		= 
 		{
 			0.5f,				0.0f,				0.0f,			0.0f,
 			0.0f,				-0.5f,				0.0f,			0.0f,
@@ -602,19 +610,19 @@ void CRenderTarget::accum_direct_f		(u32 sub_phase)
 		};
 
 		// compute xforms
-		Fmatrix				m_shadow;
+		Matrix4x4				m_shadow;
 		{
 			FPU::m64r		();
-			Fmatrix			xf_invview;		xf_invview.invert	(mView)	;
-			Fmatrix			xf_project;		xf_project.mul		(m_TexelAdjust,fuckingsun->X.D.combine);
-			m_shadow.mul	(xf_project,	xf_invview);
+			Matrix4x4			xf_invview;		xf_invview.InvertMatrixByMatrix	(mView)	;
+			Matrix4x4			xf_project;		xf_project.Multiply		(fuckingsun->X.D.combine, m_TexelAdjust);
+			m_shadow.Multiply	(xf_invview, xf_project);
 
 			// tsm-bias
 			if (SE_SUN_FAR == sub_phase)
 			{
 				Fvector		bias;	bias.mul		(L_dir,ps_r_sun_tsm_bias);
-				Fmatrix		bias_t;	bias_t.translate(bias);
-				m_shadow.mulB_44	(bias_t);
+				Matrix4x4		bias_t;	bias_t.Translate(bias);
+				m_shadow.Multiply	(bias_t, m_shadow);
 			}
 			FPU::m24r		();
 		}
@@ -724,7 +732,7 @@ void CRenderTarget::accum_direct_lum	()
 		RCache.Render				(D3DPT_TRIANGLELIST,Offset,0,4,0,2);
 }
 
-void CRenderTarget::accum_direct_volumetric	(u32 sub_phase, const u32 Offset, const Fmatrix &mShadow)
+void CRenderTarget::accum_direct_volumetric	(u32 sub_phase, const u32 Offset, const Matrix4x4 &mShadow)
 {
 	if ((sub_phase != SE_SUN_NEAR) && (sub_phase != SE_SUN_MIDDLE) && (sub_phase != SE_SUN_FAR)) return;
 
@@ -789,11 +797,11 @@ void CRenderTarget::accum_direct_volumetric	(u32 sub_phase, const u32 Offset, co
 
 		RCache.set_c				("Ldynamic_color",		L_clr.x,L_clr.y,L_clr.z,0);
 		RCache.set_c				("m_shadow",			mShadow);
-		Fmatrix			m_Texgen;
-		m_Texgen.identity();
+		Matrix4x4			m_Texgen;
+		m_Texgen.Identity();
  		RCache.xforms.set_W( m_Texgen );
- 		RCache.xforms.set_V( CastToGSCMatrix(Device.mView ));
- 		RCache.xforms.set_P( CastToGSCMatrix(Device.mProject ));
+ 		RCache.xforms.set_V( (Device.mView ));
+ 		RCache.xforms.set_P( (Device.mProject ));
  		u_compute_texgen_screen	( m_Texgen );
 
 		RCache.set_c				("m_texgen",			m_Texgen);

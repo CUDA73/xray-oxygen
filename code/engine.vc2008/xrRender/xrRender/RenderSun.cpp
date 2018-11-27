@@ -150,7 +150,7 @@ void CRender::render_sun()
 	xr_vector<Fbox3, xalloc<Fbox3> >		&s_receivers = main_coarse_structure;
 	s_casters.reserve(s_receivers.size());
 	set_Recorder(&s_casters);
-	r_dsgraph_render_subspace(cull_sector, &cull_frustum, CastToGSCMatrix(cull_xform), cull_COP, TRUE);
+	r_dsgraph_render_subspace(cull_sector, &cull_frustum, (cull_xform), cull_COP, TRUE);
 
 	// IGNORE PORTALS
 	if (ps_r_flags.test(R_FLAG_SUN_IGNORE_PORTALS))
@@ -487,8 +487,8 @@ void CRender::render_sun()
 		bool	bSpecial = !mapNormalPasses[1][0].empty() || !mapMatrixPasses[1][0].empty() || !mapSorted.empty();
 		if (bNormal || bSpecial) {
 			Target->phase_smap_direct(fuckingsun, SE_SUN_FAR);
-			RCache.set_xform_world(Fidentity);
-			RCache.set_xform_view(Fidentity);
+			RCache.set_xform_world(DirectX::XMMatrixIdentity());
+			RCache.set_xform_view(DirectX::XMMatrixIdentity());
 			RCache.set_xform_project(fuckingsun->X.D.combine);
 			r_dsgraph_render_graph(0);
 			fuckingsun->X.D.transluent = FALSE;
@@ -521,7 +521,7 @@ void CRender::render_sun()
 	Target->accum_direct(SE_SUN_FAR);
 
 	// Restore XForms
-	RCache.set_xform_world(Fidentity);
+	RCache.set_xform_world(DirectX::XMMatrixIdentity());
 	RCache.set_xform_view(Device.mView);
 	RCache.set_xform_project(Device.mProject);
 }
@@ -681,7 +681,7 @@ void CRender::render_sun_near()
 	}
 
 	// Fill the database
-	r_dsgraph_render_subspace(cull_sector, &cull_frustum, CastToGSCMatrix(cull_xform), cull_COP, TRUE);
+	r_dsgraph_render_subspace(cull_sector, &cull_frustum, (cull_xform), cull_COP, TRUE);
 
 	// Finalize & Cleanup
 	fuckingsun->X.D.combine = cull_xform;
@@ -693,8 +693,8 @@ void CRender::render_sun_near()
 		bool	bSpecial = !mapNormalPasses[1][0].empty() || !mapMatrixPasses[1][0].empty() || !mapSorted.empty();
 		if (bNormal || bSpecial) {
 			Target->phase_smap_direct(fuckingsun, SE_SUN_NEAR);
-			RCache.set_xform_world(Fidentity);
-			RCache.set_xform_view(Fidentity);
+			RCache.set_xform_world(DirectX::XMMatrixIdentity());
+			RCache.set_xform_view(DirectX::XMMatrixIdentity());
 			RCache.set_xform_project(fuckingsun->X.D.combine);
 			r_dsgraph_render_graph(0);
 			if (ps_r_flags.test(R_FLAG_DETAIL_SHADOW))
@@ -729,7 +729,7 @@ void CRender::render_sun_near()
 	Target->accum_direct(SE_SUN_NEAR);
 
 	// Restore XForms
-	RCache.set_xform_world(Fidentity);
+	RCache.set_xform_world(DirectX::XMMatrixIdentity());
 	RCache.set_xform_view(Device.mView);
 	RCache.set_xform_project(Device.mProject);
 }
@@ -994,7 +994,7 @@ void CRender::render_sun_cascade(u32 cascade_ind)
 	r_pmask(true, RImplementation.o.Tshadows);
 
 	// Fill the database
-	r_dsgraph_render_subspace(cull_sector, &cull_frustum, CastToGSCMatrix(cull_xform), cull_COP, TRUE);
+	r_dsgraph_render_subspace(cull_sector, &cull_frustum, (cull_xform), cull_COP, TRUE);
 
 	// Finalize & Cleanup
 	fuckingsun->X.D.combine = cull_xform;
@@ -1006,8 +1006,8 @@ void CRender::render_sun_cascade(u32 cascade_ind)
 	if (bNormal || bSpecial)
 	{
 		Target->phase_smap_direct(fuckingsun, SE_SUN_FAR);
-		RCache.set_xform_world(Fidentity);
-		RCache.set_xform_view(Fidentity);
+		RCache.set_xform_world(DirectX::XMMatrixIdentity());
+		RCache.set_xform_view(DirectX::XMMatrixIdentity());
 		RCache.set_xform_project(fuckingsun->X.D.combine);
 		r_dsgraph_render_graph(0);
 		if (ps_r_flags.test(R_FLAG_DETAIL_SHADOW))
@@ -1048,7 +1048,7 @@ void CRender::render_sun_cascade(u32 cascade_ind)
 			Target->accum_direct_cascade(SE_SUN_FAR, m_sun_cascades[cascade_ind].xform, m_sun_cascades[cascade_ind - 1].xform, m_sun_cascades[cascade_ind].bias);
 
 	// Restore XForms
-	RCache.set_xform_world(Fidentity);
+	RCache.set_xform_world(DirectX::XMMatrixIdentity());
 	RCache.set_xform_view(Device.mView);
 	RCache.set_xform_project(Device.mProject);
 }

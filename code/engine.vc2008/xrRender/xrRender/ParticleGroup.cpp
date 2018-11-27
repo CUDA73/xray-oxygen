@@ -202,7 +202,7 @@ void CParticleGroup::SItem::StartRelatedChild(CParticleEffect* emitter, LPCSTR e
 	
 	C->SetHudMode			(emitter->GetHudMode());
 
-    Fmatrix M; 				M.identity();
+    Matrix4x4 M; 				M.Identity();
     Fvector vel; 			vel.sub(m.pos,m.posB); vel.div(fDT_STEP);
     if (emitter->m_RT_Flags.is(CParticleEffect::flRT_XFORM)){
         M.set				(emitter->m_XFORM);
@@ -230,7 +230,7 @@ void CParticleGroup::SItem::StartFreeChild(CParticleEffect* emitter, LPCSTR nm, 
 	C->SetHudMode				(emitter->GetHudMode());
     if(!C->IsLooped())
 	{
-        Fmatrix M; 				M.identity();
+        Matrix4x4 M; 				M.Identity();
         Fvector vel; 			vel.sub(m.pos,m.posB); vel.div(fDT_STEP);
         if (emitter->m_RT_Flags.is(CParticleEffect::flRT_XFORM)){
         	M.set				(emitter->m_XFORM);

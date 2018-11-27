@@ -30,8 +30,8 @@ void CKinematics::CalculateBones			(BOOL bForceExact)
 #ifdef DEBUG
 	RDEVICE.Statistic->Animation.Begin();
 #endif
-
-	Bone_Calculate					(bones->at(iRoot),&Fidentity);
+	Matrix4x4 MIdent = DirectX::XMMatrixIdentity();
+	Bone_Calculate					(bones->at(iRoot), &MIdent);
 #ifdef DEBUG
 	check_kinematics				(this, dbg_name.c_str() );
 	RDEVICE.Statistic->Animation.End	();
@@ -50,20 +50,20 @@ void CKinematics::CalculateBones			(BOOL bForceExact)
 		{
 			if			(!LL_GetBoneVisible(u16(b)))		continue;
 			Fobb&		obb		= (*bones)[b]->obb;
-			Fmatrix&	Mbone	= bone_instances[b].mTransform;
-			Fmatrix		Mbox;	obb.xform_get(Mbox);
-			Fmatrix		X;		X.mul_43(Mbone,Mbox);
+			Matrix4x4&	Mbone	= bone_instances[b].mTransform;
+			Matrix4x4		Mbox;	obb.xform_get(XRay::Math::CastToGSCMatrix(Mbox));
+			Matrix4x4		X;		X.Multiply43(Mbox, Mbone);
 			Fvector&	S		= obb.m_halfsize;
 
 			Fvector			P,A;
-			A.set( -S.x,	-S.y,	-S.z ); X.transform_tiny(P,A); Box.modify(P);
-			A.set( -S.x,	-S.y,	 S.z ); X.transform_tiny(P,A); Box.modify(P);
-			A.set(  S.x,	-S.y,	 S.z ); X.transform_tiny(P,A); Box.modify(P);
-			A.set(  S.x,	-S.y,	-S.z ); X.transform_tiny(P,A); Box.modify(P);
-			A.set( -S.x,	 S.y,	-S.z ); X.transform_tiny(P,A); Box.modify(P);
-			A.set( -S.x,	 S.y,	 S.z ); X.transform_tiny(P,A); Box.modify(P);
-			A.set(  S.x, 	 S.y,	 S.z ); X.transform_tiny(P,A); Box.modify(P);
-			A.set(  S.x, 	 S.y,	-S.z ); X.transform_tiny(P,A); Box.modify(P);
+			A.set( -S.x,	-S.y,	-S.z ); XRay::Math::TransformTiny(X, P, A); Box.modify(P);
+			A.set( -S.x,	-S.y,	 S.z ); XRay::Math::TransformTiny(X, P, A); Box.modify(P);
+			A.set(  S.x,	-S.y,	 S.z ); XRay::Math::TransformTiny(X, P, A); Box.modify(P);
+			A.set(  S.x,	-S.y,	-S.z ); XRay::Math::TransformTiny(X, P, A); Box.modify(P);
+			A.set( -S.x,	 S.y,	-S.z ); XRay::Math::TransformTiny(X, P, A); Box.modify(P);
+			A.set( -S.x,	 S.y,	 S.z ); XRay::Math::TransformTiny(X, P, A); Box.modify(P);
+			A.set(  S.x, 	 S.y,	 S.z ); XRay::Math::TransformTiny(X, P, A); Box.modify(P);
+			A.set(  S.x, 	 S.y,	-S.z ); XRay::Math::TransformTiny(X, P, A); Box.modify(P);
 		}
 	if(bones->size())
 	{
@@ -78,7 +78,7 @@ void CKinematics::CalculateBones			(BOOL bForceExact)
 		if(vis.sphere.R>1000.f)
 		{
 			for(u16 ii=0; ii<LL_BoneCount();++ii){
-				Fmatrix tr;
+				Matrix4x4 tr;
 				tr = LL_GetTransform(ii);
 				Log("bone ",LL_BoneName_dbg(ii));
 				Log("bone_matrix",tr);
@@ -97,13 +97,13 @@ void CKinematics::CalculateBones			(BOOL bForceExact)
 void check_kinematics(CKinematics* _k, LPCSTR s)
 {
 	CKinematics* K = _k;
-	Fmatrix&	MrootBone		= K->LL_GetBoneInstance(K->LL_GetBoneRoot()).mTransform;
+	Matrix4x4&	MrootBone		= K->LL_GetBoneInstance(K->LL_GetBoneRoot()).mTransform;
 	if(MrootBone.c.y >10000)
 	{	
 		Msg("all bones transform:--------[%s]",s);
 		
 		for(u16 ii=0; ii<K->LL_BoneCount();++ii){
-			Fmatrix tr;
+			Matrix4x4 tr;
 
 			tr = K->LL_GetTransform(ii);
 			Log("bone ",K->LL_BoneName_dbg(ii));
@@ -115,12 +115,12 @@ void check_kinematics(CKinematics* _k, LPCSTR s)
 }
 #endif
 
-void	CKinematics::			BuildBoneMatrix			( const CBoneData* bd, CBoneInstance &bi, const Fmatrix *parent, u8 channel_mask/* = (1<<0)*/ )
+void	CKinematics::			BuildBoneMatrix			( const CBoneData* bd, CBoneInstance &bi, const Matrix4x4 *parent, u8 channel_mask/* = (1<<0)*/ )
 {
-	bi.mTransform.mul_43	(*parent,bd->bind_transform);
+	bi.mTransform.Multiply43(bd->bind_transform, *parent);
 }
 
-void CKinematics::CLBone( const CBoneData* bd, CBoneInstance &bi, const Fmatrix *parent, u8 channel_mask /*= (1<<0)*/)
+void CKinematics::CLBone( const CBoneData* bd, CBoneInstance &bi, const Matrix4x4 *parent, u8 channel_mask /*= (1<<0)*/)
 {
 	
 	u16							SelfID				= bd->GetSelfID();
@@ -142,11 +142,11 @@ void CKinematics::CLBone( const CBoneData* bd, CBoneInstance &bi, const Fmatrix 
 #endif // #ifndef MASTER_GOLD
 			}
 		}
-		bi.mRenderTransform.mul_43(bi.mTransform,bd->m2b_transform);
+		bi.mRenderTransform.Multiply43(bd->m2b_transform, bi.mTransform);
 	}
 }
 
-void	CKinematics::Bone_GetAnimPos(Fmatrix& pos,u16 id,u8 mask_channel, bool ignore_callbacks)
+void	CKinematics::Bone_GetAnimPos(Matrix4x4& pos,u16 id,u8 mask_channel, bool ignore_callbacks)
 {
 	R_ASSERT(id<LL_BoneCount());
 	CBoneInstance bi = LL_GetBoneInstance(id);
@@ -154,10 +154,10 @@ void	CKinematics::Bone_GetAnimPos(Fmatrix& pos,u16 id,u8 mask_channel, bool igno
 #ifndef MASTER_GOLD
 	R_ASSERT( _valid( bi.mTransform ) );
 #endif
-	pos.set( bi.mTransform );
+	pos =  bi.mTransform;
 }
 
-void CKinematics::Bone_Calculate(CBoneData* bd, Fmatrix *parent)
+void CKinematics::Bone_Calculate(CBoneData* bd, Matrix4x4 *parent)
 {
 
 	u16							SelfID				= bd->GetSelfID();
@@ -184,7 +184,8 @@ void	CKinematics::BoneChain_Calculate		(const CBoneData* bd, CBoneInstance &bi, 
 	}
 	if(SelfID==LL_GetBoneRoot())
 	{
-		CLBone( bd, bi, &Fidentity, mask_channel );
+		Matrix4x4 MIdent = DirectX::XMMatrixIdentity();
+		CLBone( bd, bi, &MIdent, mask_channel );
 		//restore callback	
 		bi.set_callback( bi.callback_type(), bc, bi.callback_param(), ow );
 		return;

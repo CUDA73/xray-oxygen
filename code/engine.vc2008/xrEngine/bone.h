@@ -21,8 +21,8 @@ public:
     typedef		BoneCallbackFunction*		BoneCallback;
 
 	// data
-	Fmatrix				mTransform;							// final x-form matrix (local to model)
-	Fmatrix				mRenderTransform;					// final x-form matrix (model_base -> bone -> model)
+	Matrix4x4				mTransform;							// final x-form matrix (local to model)
+	Matrix4x4				mRenderTransform;					// final x-form matrix (model_base -> bone -> model)
 private:
 	BoneCallback		Callback;
 	void*				Callback_Param;
@@ -278,7 +278,7 @@ public:
 	virtual			u16			_BCL	GetNumChildren	( )			const	= 0;
 
 	virtual const SJointIKData& _BCL	get_IK_data			( )const	= 0;
-	virtual const	Fmatrix&	_BCL	get_bind_transform	( )const	= 0;
+	virtual const	Matrix4x4&	_BCL	get_bind_transform	( )const	= 0;
 	virtual const	SBoneShape&	_BCL	get_shape			( )const	= 0;
 	virtual const	Fobb&		_BCL	get_obb				( )const	= 0;
 	virtual const	Fvector&	_BCL	get_center_of_mass	( )const	= 0;
@@ -310,11 +310,11 @@ class ENGINE_API CBone:
 	Fvector			    mot_rotate;		// XYZ format (Game format)
 	float			    mot_length;
 
-    Fmatrix			    mot_transform;
+    Matrix4x4			    mot_transform;
 
-	Fmatrix				local_rest_transform;
-    Fmatrix			    rest_transform;
-    Fmatrix			    rest_i_transform;
+	Matrix4x4				local_rest_transform;
+    Matrix4x4			    rest_transform;
+    Matrix4x4			    rest_i_transform;
 public:
 	int				    SelfID;
     CBone*			    parent;
@@ -353,15 +353,15 @@ public:
     const Fvector&      _Offset			(){return mot_offset;}
     const Fvector&      _Rotate			(){return mot_rotate;}
     float			    _Length			(){return mot_length;}
-    IC Fmatrix&		    _RTransform		(){return rest_transform;}
-    IC Fmatrix&		    _RITransform	(){return rest_i_transform;}
-    IC Fmatrix&		    _LRTransform	(){return local_rest_transform;}
-    IC Fmatrix&		    _MTransform		(){return mot_transform;}
+    IC Matrix4x4&		    _RTransform		(){return rest_transform;}
+    IC Matrix4x4&		    _RITransform	(){return rest_i_transform;}
+    IC Matrix4x4&		    _LRTransform	(){return local_rest_transform;}
+    IC Matrix4x4&		    _MTransform		(){return mot_transform;}
     
-	IC Fmatrix&		    _LTransform		(){return mTransform;}//{return last_transform;}
-    IC const Fmatrix&	_LTransform		() const {return mTransform;}
+	IC Matrix4x4&		    _LTransform		(){return mTransform;}//{return last_transform;}
+    IC const Matrix4x4&	_LTransform		() const {return mTransform;}
     
-    IC Fmatrix&		    _RenderTransform(){return mRenderTransform;}//{return render_transform;}
+    IC Matrix4x4&		    _RenderTransform(){return mRenderTransform;}//{return render_transform;}
 	IC Fvector&			_RestOffset		(){return rest_offset;}
 	IC Fvector&		    _RestRotate		(){return rest_rotate;}
     
@@ -393,7 +393,7 @@ IC	float	_BCL		editor_hi_limit ( u8 k ) const	{ return IK_data.limits[k].limit.y
 	void			    BoneMove		(const Fvector& amount);
 	void			    BoneRotate		(const Fvector& axis, float angle);
 
-	bool 			    Pick			(float& dist, const Fvector& S, const Fvector& D, const Fmatrix& parent);
+	bool 			    Pick			(float& dist, const Fvector& S, const Fvector& D, const Matrix4x4& parent);
 
     void			    Select			(BOOL flag)	{ flags.set(flSelected,flag); }
     bool			    Selected		(){return !!flags.is(flSelected);}
@@ -408,7 +408,7 @@ private:
         		u16				_BCL	GetSelfID			( )			const	{return (u16)SelfID;}
 				u16				_BCL	GetNumChildren		( )			const	{return u16( children.size() );}
 		const	SJointIKData&	_BCL	get_IK_data			( )			const	{return	IK_data;}
-		const	Fmatrix&		_BCL	get_bind_transform	( )			const	
+		const	Matrix4x4&		_BCL	get_bind_transform	( )			const	
 		{
 			
 				return	local_rest_transform;
@@ -443,8 +443,8 @@ public:
 
 	Fobb				obb;			
 
-	Fmatrix				bind_transform;
-	Fmatrix				m2b_transform;	// model to bone conversion transform
+	Matrix4x4				bind_transform;
+	Matrix4x4				m2b_transform;	// model to bone conversion transform
 	SBoneShape			shape;
 	shared_str			game_mtl_name;
 	u16					game_mtl_idx;
@@ -473,13 +473,13 @@ public:
 		child_faces[child_idx].push_back(idx);
 	}
 	// Calculation
-	void				CalculateM2B	(const Fmatrix& Parent);
+	void				CalculateM2B	(const Matrix4x4& Parent);
 private:
 				IBoneData&		_BCL	GetChild			( u16 id )			;
 		const	IBoneData&		_BCL	GetChild			( u16 id )	const	;
 				u16				_BCL	GetNumChildren		( )			const	;
 		const	SJointIKData&	_BCL	get_IK_data			( )			const	{return	IK_data;}
-		const	Fmatrix&		_BCL	get_bind_transform	( )			const	{return	bind_transform;}
+		const	Matrix4x4&		_BCL	get_bind_transform	( )			const	{return	bind_transform;}
 		const	SBoneShape&		_BCL	get_shape			( )			const	{return shape;}
 		const	Fobb&			_BCL	get_obb				( )			const	{return obb;}
 		const	Fvector&		_BCL	get_center_of_mass	( )			const	{return center_of_mass;}
@@ -511,9 +511,9 @@ enum EBoneCallbackType{
 IC void		CBoneInstance::construct	()
 {
     std::memset(this,0,sizeof(*this));
-	mTransform.identity			();
+	mTransform.Identity			();
 
-	mRenderTransform.identity	();
+	mRenderTransform.Identity	();
 	Callback_overwrite			= FALSE;
 }
 #endif

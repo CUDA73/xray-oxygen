@@ -62,44 +62,44 @@ void CRenderTarget::u_stencil_optimize(BOOL common_stencil)
 }
 
 // 2D texgen (texture adjustment matrix)
-void CRenderTarget::u_compute_texgen_screen(Fmatrix& m_Texgen)
+void CRenderTarget::u_compute_texgen_screen(Matrix4x4& m_Texgen)
 {
 	float _w	= float(Device.dwWidth);
 	float _h	= float(Device.dwHeight);
 	float o_w	= (0.5f / _w);
 	float o_h	= (0.5f / _h);
 
-	Fmatrix m_TexelAdjust = 
+	Matrix4x4 m_TexelAdjust = 
 	{
 		0.5f,				0.0f,				0.0f,			0.0f,
 		0.0f,				-0.5f,				0.0f,			0.0f,
 		0.0f,				0.0f,				1.0f,			0.0f,
 		0.5f + o_w,			0.5f + o_h,			0.0f,			1.0f
 	};
-	m_Texgen.mul(m_TexelAdjust, RCache.xforms.m_wvp);
+	m_Texgen.Multiply(RCache.xforms.m_wvp, m_TexelAdjust);
 }
 
 // 2D texgen for jitter (texture adjustment matrix)
-void CRenderTarget::u_compute_texgen_jitter	(Fmatrix& m_Texgen_J)
+void CRenderTarget::u_compute_texgen_jitter	(Matrix4x4& m_Texgen_J)
 {
 	// place into	0..1 space
-	Fmatrix m_TexelAdjust = 
+	Matrix4x4 m_TexelAdjust = 
 	{
 		0.5f,	 0.0f,	0.0f,	0.0f,
 		0.0f,	-0.5f,	0.0f,	0.0f,
 		0.0f,	 0.0f,	1.0f,	0.0f,
 		0.5f,	 0.5f,	0.0f,	1.0f
 	};
-	m_Texgen_J.mul(m_TexelAdjust, RCache.xforms.m_wvp);
+	m_Texgen_J.Multiply(RCache.xforms.m_wvp, m_TexelAdjust);
 
 	// rescale - tile it
 	float scale_X	= float(Device.dwWidth)	/ float(TEX_jitter);
 	float scale_Y	= float(Device.dwHeight)/ float(TEX_jitter);
 	float offset	= (0.5f / float(TEX_jitter));
 
-	m_TexelAdjust.scale			(scale_X, scale_Y, 1.0f);
-	m_TexelAdjust.translate_over(offset, offset, 0.0f);
-	m_Texgen_J.mulA_44			(m_TexelAdjust);
+	m_TexelAdjust = DirectX::XMMatrixScaling(scale_X, scale_Y, 1.0f);
+	m_TexelAdjust.w = { (offset, offset, 0.0f, m_TexelAdjust.w[3]) };
+	m_Texgen_J.Multiply(m_Texgen_J, m_TexelAdjust);
 }
 
 u8 fpack(float v)
