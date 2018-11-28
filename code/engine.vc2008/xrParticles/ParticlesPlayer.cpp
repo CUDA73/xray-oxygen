@@ -169,8 +169,8 @@ void CParticlesPlayer::StartParticles(const shared_str& particles_name, u16 bone
 	particles_info.life_time = auto_stop ? life_time : u32(-1);
 	xform.getHPB(particles_info.angles);
 
-	Fmatrix m; m.setHPB(particles_info.angles.x, particles_info.angles.y, particles_info.angles.z);
-	GetBonePos(object, pBoneInfo->index, pBoneInfo->offset, m.c);
+	Matrix4x4 m; m.SetHPB(particles_info.angles.x, particles_info.angles.y, particles_info.angles.z);
+	GetBonePos(object, pBoneInfo->index, pBoneInfo->offset, m.w);
 	particles_info.ps->UpdateParent(m, zero_vel);
 
 	if (!particles_info.ps->IsPlaying())
@@ -192,8 +192,8 @@ void CParticlesPlayer::StartParticles(const shared_str& ps_name, const Fmatrix& 
 		xform.getHPB(particles_info.angles);
 		//начать играть партиклы
 
-		Fmatrix m; m.set(xform);
-		GetBonePos(object, it->index, it->offset, m.c);
+		Matrix4x4 m; m = (xform);
+		GetBonePos(object, it->index, it->offset, m.w);
 		particles_info.ps->UpdateParent(m, zero_vel);
 		if (!particles_info.ps->IsPlaying())
 			particles_info.ps->Play(false);
@@ -277,9 +277,9 @@ void CParticlesPlayer::UpdateParticles()
 			SParticlesInfo& p_info = *p_it;
 			if (!p_info.ps) continue;
 			//обновить позицию партиклов
-			Fmatrix xform;
-			xform.setHPB(p_info.angles.x, p_info.angles.y, p_info.angles.z);
-			GetBonePos(object, b_info.index, b_info.offset, xform.c);
+			Matrix4x4 xform;
+			xform.SetHPB(p_info.angles.x, p_info.angles.y, p_info.angles.z);
+			GetBonePos(object, b_info.index, b_info.offset, xform.w);
 			p_info.ps->UpdateParent(xform, parent_vel);
 
 			//обновить время существования
@@ -316,8 +316,8 @@ void CParticlesPlayer::GetBonePos(CObject* pObject, u16 bone_id, const Fvector& 
 	CBoneInstance& l_tBoneInstance = pKinematics->LL_GetBoneInstance(bone_id);
 
 	result = offset;
-	l_tBoneInstance.mTransform.transform_tiny(result);
-	pObject->XFORM().transform_tiny(result);
+	l_tBoneInstance.mTransform.TransformTiny(result);
+	pObject->XFORM().TransformTiny(result);
 }
 
 void CParticlesPlayer::MakeXFORM(CObject* pObject, u16 bone_id, const Fvector& dir, const Fvector& offset, Fmatrix& result)

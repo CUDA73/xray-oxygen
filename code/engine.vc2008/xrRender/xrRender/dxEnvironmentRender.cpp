@@ -240,9 +240,10 @@ void dxEnvironmentRender::RenderSky(CEnvironment &env)
 	dxEnvDescriptorMixerRender &mixRen = *(dxEnvDescriptorMixerRender*)&*env.CurrentEnv->m_pDescriptorMixer;
 
 	// draw sky box
-	Fmatrix mSky;
-	mSky.rotateY(env.CurrentEnv->sky_rotation);
-	mSky.translate_over(Device.vCameraPosition);
+	Matrix4x4 mSky;
+
+	mSky = DirectX::XMMatrixRotationY(env.CurrentEnv->wind_direction); // wind_direction
+	mSky.TranslateOver(Device.vCameraPosition);
 
 	u32	i_offset, v_offset;
 	u32	C = color_rgba(iFloor(env.CurrentEnv->sky_color.x*255.f), iFloor(env.CurrentEnv->sky_color.y*255.f), iFloor(env.CurrentEnv->sky_color.z*255.f), iFloor(env.CurrentEnv->weight*255.f));
@@ -286,12 +287,12 @@ void dxEnvironmentRender::RenderClouds(CEnvironment &env)
 {
 	::Render->rmFar				();
 
-	Fmatrix	mXFORM, mScale;
-	mScale.scale(10, 0.4f, 10);
+	Matrix4x4	mXFORM, mScale;
+	mScale = DirectX::XMMatrixScaling(10, 0.4f, 10);
 
-	mXFORM.rotateY(SkyGodEdition ? env.CurrentEnv->wind_direction : env.CurrentEnv->sky_rotation); // wind_direction
-	mXFORM.mulB_43(mScale);
-	mXFORM.translate_over(Device.vCameraPosition);
+	mXFORM = DirectX::XMMatrixRotationY(env.CurrentEnv->wind_direction); // wind_direction
+	mXFORM.Multiply43(mScale, mXFORM);
+	mXFORM.TranslateOver(Device.vCameraPosition);
 
 	Fvector wd0, wd1;
 	Fvector4 wind_dir;

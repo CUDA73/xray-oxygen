@@ -432,10 +432,10 @@ void CRenderTarget::accum_direct_cascade	( u32 sub_phase, Matrix4x4& xform, Matr
 			zMin = ps_r_sun_near;
 			zMax = ps_r_sun_far;
 		}
-		center_pt.mad(Device.vCameraPosition,Device.vCameraDirection,zMin);	TransformByMatrix(mTransform, center_pt);
+		center_pt.mad(Device.vCameraPosition,Device.vCameraDirection,zMin);	mTransform.Transform(center_pt);
 		zMin = center_pt.z	;
 
-		center_pt.mad(Device.vCameraPosition,Device.vCameraDirection,zMax);	TransformByMatrix(mTransform, center_pt);
+		center_pt.mad(Device.vCameraPosition,Device.vCameraDirection,zMax);		mTransform.Transform(center_pt);
 		zMax = center_pt.z	;
 
 		if (u_DBT_enable(zMin,zMax))	

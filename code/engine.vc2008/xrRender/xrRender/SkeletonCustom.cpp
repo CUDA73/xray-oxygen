@@ -64,8 +64,8 @@ void CKinematics::DebugRender(Matrix4x4& XFORM)
 		Matrix4x4& M2 = bone_instances[dbgLines[i+1]].mTransform;
 
 		Fvector P1,P2;
-		XRay::Math::TransformTiny(M1,P1,Z);
-		XRay::Math::TransformTiny(M2,P2,Z);
+		M1.TransformTiny(P1, Z);
+		M2.TransformTiny(P2,Z);
 
 		RCache.dbg_DrawLINE(XFORM,P1,P2,D3DCOLOR_XRGB(0,255,0));
 
@@ -536,15 +536,15 @@ bool	CKinematics::	PickBone			(const Matrix4x4 &parent_xform, IKinematics::pick_
 	Fvector S,D;//normal		= {0,0,0}
 	// transform ray from world to model
 	Matrix4x4 P;	P.InvertMatrixByMatrix	(parent_xform);
-	XRay::Math::TransformTiny(P, S,start);
+	P.TransformTiny(S, start);
 	XRay::Math::TransformDirByMatrix(P, D, dir);
 	for (u32 i=0; i<children.size(); i++)
 			if (LL_GetChild(i)->PickBone(r,dist,S,D,bone_id))
 			{
-				XRay::Math::TransformTiny(parent_xform, r.normal);
-				XRay::Math::TransformTiny(parent_xform, r.tri[0]);
-				XRay::Math::TransformTiny(parent_xform, r.tri[1]);
-				XRay::Math::TransformTiny(parent_xform, r.tri[2]);
+				parent_xform.TransformTiny(r.normal);
+				parent_xform.TransformTiny(r.tri[0]);
+				parent_xform.TransformTiny(r.tri[1]);
+				parent_xform.TransformTiny(r.tri[2]);
 				return true;
 			}
 	return false;
@@ -556,7 +556,7 @@ void CKinematics::AddWallmark(const Matrix4x4* parent_xform, const Fvector3& sta
 	// transform ray from world to model
 	Matrix4x4 P;	
 	P.InvertMatrixByMatrix	(*parent_xform);
-	XRay::Math::TransformTiny(P, S, start);
+	P.TransformTiny(S, start);
 	XRay::Math::TransformDirByMatrix(P, D, dir);
 	// find pick point
 	float dist				= flt_max;
@@ -617,7 +617,7 @@ void CKinematics::AddWallmark(const Matrix4x4* parent_xform, const Fvector3& sta
 	// ok. allocate wallmark
 	intrusive_ptr<CSkeletonWallmark>		wm = xr_new<CSkeletonWallmark>(this,parent_xform,shader,cp,RDEVICE.fTimeGlobal);
 	wm->m_LocalBounds.set		(cp,size*2.f);
-	XRay::Math::TransformTiny(*wm->XFORM(), wm->m_Bounds.P,cp);
+	(*wm->XFORM()).TransformTiny( wm->m_Bounds.P,cp);
 	wm->m_Bounds.R				= wm->m_LocalBounds.R; 
 
 	Fvector tmp; tmp.invert		(D);
@@ -684,7 +684,7 @@ void CKinematics::RenderWallmark(intrusive_ptr<CSkeletonWallmark> wm, FVF::LIT* 
 			{
 				// 1-link
 				Matrix4x4& xform0 = LL_GetBoneInstance(F.bone_id[k][0]).mRenderTransform;
-				XRay::Math::TransformTiny(xform0, P, F.vert[k]);
+				xform0.TransformTiny( P, F.vert[k]);
 			}
 			else if (F.bone_id[k][1] == F.bone_id[k][2])
 			{
@@ -692,8 +692,8 @@ void CKinematics::RenderWallmark(intrusive_ptr<CSkeletonWallmark> wm, FVF::LIT* 
 				Fvector P0, P1;
 				Matrix4x4& xform0 = LL_GetBoneInstance(F.bone_id[k][0]).mRenderTransform;
 				Matrix4x4& xform1 = LL_GetBoneInstance(F.bone_id[k][1]).mRenderTransform;
-				XRay::Math::TransformTiny(xform0, P0, F.vert[k]);
-				XRay::Math::TransformTiny(xform1, P1, F.vert[k]);
+				xform0.TransformTiny( P0, F.vert[k]);
+				xform1.TransformTiny( P1, F.vert[k]);
 				P.lerp(P0, P1, F.weight[k][0]);
 			}
 			else if (F.bone_id[k][2] == F.bone_id[k][3])
@@ -703,9 +703,9 @@ void CKinematics::RenderWallmark(intrusive_ptr<CSkeletonWallmark> wm, FVF::LIT* 
 				Matrix4x4& xform0 = LL_GetBoneInstance(F.bone_id[k][0]).mRenderTransform;
 				Matrix4x4& xform1 = LL_GetBoneInstance(F.bone_id[k][1]).mRenderTransform;
 				Matrix4x4& xform2 = LL_GetBoneInstance(F.bone_id[k][2]).mRenderTransform;
-				XRay::Math::TransformTiny(xform0, P0, F.vert[k]);
-				XRay::Math::TransformTiny(xform1, P1, F.vert[k]);
-				XRay::Math::TransformTiny(xform2, P2, F.vert[k]);
+				xform0.TransformTiny( P0, F.vert[k]);
+				xform1.TransformTiny( P1, F.vert[k]);
+				xform2.TransformTiny( P2, F.vert[k]);
 
 				float w0 = F.weight[k][0];
 				float w1 = F.weight[k][1];
@@ -723,7 +723,7 @@ void CKinematics::RenderWallmark(intrusive_ptr<CSkeletonWallmark> wm, FVF::LIT* 
 				for (int i = 0; i < 4; ++i)
 				{
 					Matrix4x4& xform = LL_GetBoneInstance(F.bone_id[k][i]).mRenderTransform;
-					XRay::Math::TransformTiny(xform, PB[i], F.vert[k]);
+					xform.TransformTiny( PB[i], F.vert[k]);
 				}
 
 				float s = 0.f;
@@ -738,14 +738,14 @@ void CKinematics::RenderWallmark(intrusive_ptr<CSkeletonWallmark> wm, FVF::LIT* 
 				for (int i = 1; i < 4; ++i)
 					P.add(PB[i]);
 			}
-			XRay::Math::TransformTiny(*wm->XFORM(), V->p, P);
+			(*wm->XFORM()).TransformTiny( V->p, P);
 			V->t.set(F.uv[k]);
 			int			aC = iFloor(w * 255.f);	clamp(aC, 0, 255);
 			V->color = color_rgba(128, 128, 128, aC);
 			V++;
 		}
 	}
-	XRay::Math::TransformTiny(*wm->XFORM(), wm->m_Bounds.P, wm->m_LocalBounds.P);
+	(*wm->XFORM()).TransformTiny( wm->m_Bounds.P, wm->m_LocalBounds.P);
 }
 
 void CKinematics::ClearWallmarks()

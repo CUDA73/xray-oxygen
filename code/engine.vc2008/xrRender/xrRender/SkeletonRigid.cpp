@@ -56,14 +56,14 @@ void CKinematics::CalculateBones			(BOOL bForceExact)
 			Fvector&	S		= obb.m_halfsize;
 
 			Fvector			P,A;
-			A.set( -S.x,	-S.y,	-S.z ); XRay::Math::TransformTiny(X, P, A); Box.modify(P);
-			A.set( -S.x,	-S.y,	 S.z ); XRay::Math::TransformTiny(X, P, A); Box.modify(P);
-			A.set(  S.x,	-S.y,	 S.z ); XRay::Math::TransformTiny(X, P, A); Box.modify(P);
-			A.set(  S.x,	-S.y,	-S.z ); XRay::Math::TransformTiny(X, P, A); Box.modify(P);
-			A.set( -S.x,	 S.y,	-S.z ); XRay::Math::TransformTiny(X, P, A); Box.modify(P);
-			A.set( -S.x,	 S.y,	 S.z ); XRay::Math::TransformTiny(X, P, A); Box.modify(P);
-			A.set(  S.x, 	 S.y,	 S.z ); XRay::Math::TransformTiny(X, P, A); Box.modify(P);
-			A.set(  S.x, 	 S.y,	-S.z ); XRay::Math::TransformTiny(X, P, A); Box.modify(P);
+			A.set( -S.x,	-S.y,	-S.z ); X.TransformTiny(P, A); Box.modify(P);
+			A.set( -S.x,	-S.y,	 S.z ); X.TransformTiny(P, A); Box.modify(P);
+			A.set(  S.x,	-S.y,	 S.z ); X.TransformTiny(P, A); Box.modify(P);
+			A.set(  S.x,	-S.y,	-S.z ); X.TransformTiny(P, A); Box.modify(P);
+			A.set( -S.x,	 S.y,	-S.z ); X.TransformTiny(P, A); Box.modify(P);
+			A.set( -S.x,	 S.y,	 S.z ); X.TransformTiny(P, A); Box.modify(P);
+			A.set(  S.x, 	 S.y,	 S.z ); X.TransformTiny(P, A); Box.modify(P);
+			A.set(  S.x, 	 S.y,	-S.z ); X.TransformTiny(P, A); Box.modify(P);
 		}
 	if(bones->size())
 	{

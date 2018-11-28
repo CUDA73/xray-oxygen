@@ -146,7 +146,7 @@ void dxUIRender::FlushPrimitive()
 	m_PointType		= pttNone;
 }
 
-void dxUIRender::CacheSetXformWorld(const Fmatrix& M)
+void dxUIRender::CacheSetXformWorld(const Matrix4x4& M)
 {
 	RCache.set_xform_world(M);
 }

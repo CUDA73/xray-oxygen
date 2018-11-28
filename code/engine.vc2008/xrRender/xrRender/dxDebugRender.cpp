@@ -88,7 +88,7 @@ void dxDebugRender::SetShader(const debug_shader &shader)
 	RCache.set_Shader(((dxUIShader*)&*shader)->hShader);
 }
 
-void dxDebugRender::CacheSetXformWorld(const Fmatrix& M)
+void dxDebugRender::CacheSetXformWorld(const Matrix4x4& M)
 {
 	RCache.set_xform_world(M);
 }
@@ -131,7 +131,7 @@ void dxDebugRender::DestroyDebugShader(dbgShaderHandle shdHandle)
 	m_dbgShaders[shdHandle].destroy();
 }
 
-void dxDebugRender::dbg_DrawTRI(Fmatrix& T, Fvector& p1, Fvector& p2, Fvector& p3, u32 C)
+void dxDebugRender::dbg_DrawTRI(Matrix4x4& T, Fvector& p1, Fvector& p2, Fvector& p3, u32 C)
 {
 	RCache.dbg_DrawTRI(T, p1, p2, p3, C);
 }

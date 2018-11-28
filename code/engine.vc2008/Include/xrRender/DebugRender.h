@@ -28,7 +28,7 @@ public:
 	virtual void	ZEnable				(bool bEnable) = 0;
 	virtual void	OnFrameEnd			() = 0;
 	virtual void	SetShader			(const debug_shader &shader) = 0;
-	virtual void	CacheSetXformWorld	(const Fmatrix& M) = 0;
+	virtual void	CacheSetXformWorld	(const Matrix4x4& M) = 0;
 	virtual void	CacheSetCullMode	(CullMode) = 0;
 	virtual void	SetAmbient			(u32 colour) = 0;
 
@@ -36,5 +36,5 @@ public:
 	virtual void	SetDebugShader		(dbgShaderHandle shdHandle) = 0;
 	virtual void	DestroyDebugShader	(dbgShaderHandle shdHandle) = 0;
 
-	virtual void	dbg_DrawTRI			(Fmatrix& T, Fvector& p1, Fvector& p2, Fvector& p3, u32 C) = 0;
+	virtual void	dbg_DrawTRI			(Matrix4x4& T, Fvector& p1, Fvector& p2, Fvector& p3, u32 C) = 0;
 };

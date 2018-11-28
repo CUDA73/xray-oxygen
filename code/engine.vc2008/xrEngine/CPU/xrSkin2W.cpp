@@ -16,58 +16,58 @@ void __stdcall xrSkin1W_x86(vertRender* D, vertBoned1W* S, u32 vCount, CBoneInst
 	// Unrolled loop
 	for (; S!=E; )
 	{
-		Fmatrix& M0		= Bones[S->matrix].mRenderTransform;
-		M0.transform_tiny(D->P,S->P);
-		M0.transform_dir (D->N,S->N);
+		Matrix4x4& M0		= Bones[S->matrix].mRenderTransform;
+		M0.TransformTiny(D->P,S->P);
+		M0.TransformDir (D->N,S->N);
 		D->u			= S->u;
 		D->v			= S->v;
 		S++; D++;
 		
-		Fmatrix& M1		= Bones[S->matrix].mRenderTransform;
-		M1.transform_tiny(D->P,S->P);
-		M1.transform_dir (D->N,S->N);
+		Matrix4x4& M1		= Bones[S->matrix].mRenderTransform;
+		M1.TransformTiny(D->P,S->P);
+		M1.TransformDir (D->N,S->N);
 		D->u			= S->u;
 		D->v			= S->v;
 		S++; D++;
 		
-		Fmatrix& M2		= Bones[S->matrix].mRenderTransform;
-		M2.transform_tiny(D->P,S->P);
-		M2.transform_dir (D->N,S->N);
+		Matrix4x4& M2		= Bones[S->matrix].mRenderTransform;
+		M2.TransformTiny(D->P,S->P);
+		M2.TransformDir (D->N,S->N);
 		D->u			= S->u;
 		D->v			= S->v;
 		S++; D++;
 		
-		Fmatrix& M3		= Bones[S->matrix].mRenderTransform;
-		M3.transform_tiny(D->P,S->P);
-		M3.transform_dir (D->N,S->N);
+		Matrix4x4& M3		= Bones[S->matrix].mRenderTransform;
+		M3.TransformTiny(D->P,S->P);
+		M3.TransformDir (D->N,S->N);
 		D->u			= S->u;
 		D->v			= S->v;
 		S++; D++; 
 		
-		Fmatrix& M4		= Bones[S->matrix].mRenderTransform;
-		M4.transform_tiny(D->P,S->P);
-		M4.transform_dir (D->N,S->N);
+		Matrix4x4& M4		= Bones[S->matrix].mRenderTransform;
+		M4.TransformTiny(D->P,S->P);
+		M4.TransformDir (D->N,S->N);
 		D->u			= S->u;
 		D->v			= S->v;
 		S++; D++;
 		
-		Fmatrix& M5		= Bones[S->matrix].mRenderTransform;
-		M5.transform_tiny(D->P,S->P);
-		M5.transform_dir (D->N,S->N);
+		Matrix4x4& M5		= Bones[S->matrix].mRenderTransform;
+		M5.TransformTiny(D->P,S->P);
+		M5.TransformDir (D->N,S->N);
 		D->u			= S->u;
 		D->v			= S->v;
 		S++; D++;
 		
-		Fmatrix& M6		= Bones[S->matrix].mRenderTransform;
-		M6.transform_tiny(D->P,S->P);
-		M6.transform_dir (D->N,S->N);
+		Matrix4x4& M6		= Bones[S->matrix].mRenderTransform;
+		M6.TransformTiny(D->P,S->P);
+		M6.TransformDir (D->N,S->N);
 		D->u			= S->u;
 		D->v			= S->v;
 		S++; D++;
 		
-		Fmatrix& M7		= Bones[S->matrix].mRenderTransform;
-		M7.transform_tiny(D->P,S->P);
-		M7.transform_dir (D->N,S->N);
+		Matrix4x4& M7		= Bones[S->matrix].mRenderTransform;
+		M7.TransformTiny(D->P,S->P);
+		M7.TransformDir (D->N,S->N);
 		D->u			= S->u;
 		D->v			= S->v;
 		S++; D++; 
@@ -77,9 +77,9 @@ void __stdcall xrSkin1W_x86(vertRender* D, vertBoned1W* S, u32 vCount, CBoneInst
 	vertBoned1W* E2 = V+vCount;
 	for (; S!=E2; )
 	{
-		Fmatrix& M		= Bones[S->matrix].mRenderTransform;
-		M.transform_tiny(D->P,S->P);
-		M.transform_dir (D->N,S->N);
+		Matrix4x4& M		= Bones[S->matrix].mRenderTransform;
+		M.TransformTiny(D->P,S->P);
+		M.TransformDir (D->N,S->N);
 		D->u			= S->u;
 		D->v			= S->v;
 		S++; D++;
@@ -101,12 +101,12 @@ void __stdcall xrSkin2W_x86(vertRender*		D,
 	for (; S!=E; )
 	{
     	if (S->matrix1!=S->matrix0){
-            Fmatrix& M0		= Bones[S->matrix0].mRenderTransform;
-            Fmatrix& M1		= Bones[S->matrix1].mRenderTransform;
-            M0.transform_tiny(P0,S->P);
-            M0.transform_dir (N0,S->N);
-            M1.transform_tiny(P1,S->P);
-            M1.transform_dir (N1,S->N);
+            Matrix4x4& M0		= Bones[S->matrix0].mRenderTransform;
+            Matrix4x4& M1		= Bones[S->matrix1].mRenderTransform;
+            M0.TransformTiny(P0,S->P);
+            M0.TransformDir (N0,S->N);
+            M1.TransformTiny(P1,S->P);
+            M1.TransformDir (N1,S->N);
             D->P.lerp		(P0,P1,S->w);
             D->N.lerp		(N0,N1,S->w);
             D->u			= S->u;
@@ -114,9 +114,9 @@ void __stdcall xrSkin2W_x86(vertRender*		D,
         }
 		else
 		{
-            Fmatrix& M0		= Bones[S->matrix0].mRenderTransform;
-            M0.transform_tiny(D->P,S->P);
-            M0.transform_dir (D->N,S->N);
+            Matrix4x4& M0		= Bones[S->matrix0].mRenderTransform;
+            M0.TransformTiny(D->P,S->P);
+            M0.TransformDir (D->N,S->N);
             D->u			= S->u;
             D->v			= S->v;
         }
@@ -140,18 +140,18 @@ void __stdcall xrSkin3W_x86(vertRender*		D,
 	// NON-Unrolled loop
 	for (; S!=E; )
 	{
-		Fmatrix& M0		= Bones[ S->m[0] ].mRenderTransform;
-        Fmatrix& M1		= Bones[ S->m[1] ].mRenderTransform;
-        Fmatrix& M2		= Bones[ S->m[2] ].mRenderTransform;
+		Matrix4x4& M0		= Bones[ S->m[0] ].mRenderTransform;
+        Matrix4x4& M1		= Bones[ S->m[1] ].mRenderTransform;
+        Matrix4x4& M2		= Bones[ S->m[2] ].mRenderTransform;
 
-		M0.transform_tiny(P0,S->P); P0.mul(S->w[0]);
-        M0.transform_dir (N0,S->N); N0.mul(S->w[0]);
+		M0.TransformTiny(P0,S->P); P0.mul(S->w[0]);
+        M0.TransformDir (N0,S->N); N0.mul(S->w[0]);
 
-        M1.transform_tiny(P1,S->P); P1.mul(S->w[1]);
-        M1.transform_dir (N1,S->N); N1.mul(S->w[1]);
+        M1.TransformTiny(P1,S->P); P1.mul(S->w[1]);
+        M1.TransformDir (N1,S->N); N1.mul(S->w[1]);
 
-        M2.transform_tiny(P2,S->P); P2.mul(1.0f-S->w[0]-S->w[1]);
-        M2.transform_dir (N2,S->N); N2.mul(1.0f-S->w[0]-S->w[1]);
+        M2.TransformTiny(P2,S->P); P2.mul(1.0f-S->w[0]-S->w[1]);
+        M2.TransformDir (N2,S->N); N2.mul(1.0f-S->w[0]-S->w[1]);
 
 		P0.add(P1);
 		P0.add(P2);
@@ -187,22 +187,22 @@ void __stdcall xrSkin4W_x86(vertRender*		D,
 	// NON-Unrolled loop
 	for (; S!=E; )
 	{
-		Fmatrix& M0		= Bones[ S->m[0] ].mRenderTransform;
-        Fmatrix& M1		= Bones[ S->m[1] ].mRenderTransform;
-        Fmatrix& M2		= Bones[ S->m[2] ].mRenderTransform;
-        Fmatrix& M3		= Bones[ S->m[3] ].mRenderTransform;
+		Matrix4x4& M0		= Bones[ S->m[0] ].mRenderTransform;
+        Matrix4x4& M1		= Bones[ S->m[1] ].mRenderTransform;
+        Matrix4x4& M2		= Bones[ S->m[2] ].mRenderTransform;
+        Matrix4x4& M3		= Bones[ S->m[3] ].mRenderTransform;
 
-		M0.transform_tiny(P0,S->P); P0.mul(S->w[0]);
-        M0.transform_dir (N0,S->N); N0.mul(S->w[0]);
+		M0.TransformTiny(P0,S->P); P0.mul(S->w[0]);
+        M0.TransformDir (N0,S->N); N0.mul(S->w[0]);
 
-        M1.transform_tiny(P1,S->P); P1.mul(S->w[1]);
-        M1.transform_dir (N1,S->N); N1.mul(S->w[1]);
+        M1.TransformTiny(P1,S->P); P1.mul(S->w[1]);
+        M1.TransformDir (N1,S->N); N1.mul(S->w[1]);
 
-        M2.transform_tiny(P2,S->P); P2.mul(S->w[2]);
-        M2.transform_dir (N2,S->N); N2.mul(S->w[2]);
+        M2.TransformTiny(P2,S->P); P2.mul(S->w[2]);
+        M2.TransformDir (N2,S->N); N2.mul(S->w[2]);
 
-		M3.transform_tiny(P3,S->P); P3.mul(1.0f-S->w[0]-S->w[1]-S->w[2]);
-        M3.transform_dir (N3,S->N); N3.mul(1.0f-S->w[0]-S->w[1]-S->w[2]);
+		M3.TransformTiny(P3,S->P); P3.mul(1.0f-S->w[0]-S->w[1]-S->w[2]);
+        M3.TransformDir (N3,S->N); N3.mul(1.0f-S->w[0]-S->w[1]-S->w[2]);
 
 		P0.add(P1);
 		P0.add(P2);

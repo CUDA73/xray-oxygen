@@ -99,7 +99,7 @@ struct	vertHW_1W
 	void get_pos_bones(Fvector& p, CKinematics* Parent) const
 	{
 		const Matrix4x4& xform = Parent->LL_GetBoneInstance(get_bone()).mRenderTransform;
-		get_pos(p);	XRay::Math::TransformTiny(xform, p);
+		get_pos(p);	xform.TransformTiny( p);
 	}
 	void get_pos(Fvector& p) const
 	{
@@ -168,8 +168,8 @@ struct	vertHW_2W
 			Fvector		P0,P1;
 			Matrix4x4& xform0			= Parent->LL_GetBoneInstance(get_bone(0)).mRenderTransform; 
 			Matrix4x4& xform1			= Parent->LL_GetBoneInstance(get_bone(1)).mRenderTransform; 
-			get_pos(P0);	XRay::Math::TransformTiny(xform0, P0);
-			get_pos(P1);	XRay::Math::TransformTiny(xform1, P1);
+			get_pos(P0);	xform0.TransformTiny( P0);
+			get_pos(P1);	xform1.TransformTiny( P1);
 			p.lerp			(P0,P1,get_weight());
 	}
 };
@@ -249,9 +249,9 @@ struct	vertHW_3W
 			Matrix4x4& xform0			= Parent->LL_GetBoneInstance(get_bone(0)).mRenderTransform; 
 			Matrix4x4& xform1			= Parent->LL_GetBoneInstance(get_bone(1)).mRenderTransform;
 			Matrix4x4& xform2			= Parent->LL_GetBoneInstance(get_bone(2)).mRenderTransform; 
-			get_pos	(P0);	XRay::Math::TransformTiny(xform0, P0);
-			get_pos(P1);	XRay::Math::TransformTiny(xform1, P1);
-			get_pos(P2);	XRay::Math::TransformTiny(xform2, P2);
+			get_pos	(P0);	xform0.TransformTiny( P0);
+			get_pos(P1);	xform1.TransformTiny( P1);
+			get_pos(P2);	xform2.TransformTiny( P2);
 			float w0 = get_weight0();
 			float w1 = get_weight1();
 			P0.mul(w0);
@@ -342,7 +342,7 @@ struct	vertHW_4W
 			{
 				Matrix4x4& xform	= Parent->LL_GetBoneInstance(get_bone(i)).mRenderTransform;
 				get_pos	(P[i]);
-				XRay::Math::TransformTiny(xform, P[i]);
+				xform.TransformTiny( P[i]);
 			}
 
 			float w[3];
@@ -990,7 +990,7 @@ void CSkeletonX_ext::_FillVerticesHW1W(const Matrix4x4& view, CSkeletonWallmark&
 
 			const Matrix4x4& xform = Parent->LL_GetBoneInstance(F.bone_id[k][0]).mRenderTransform;
 			vert.get_pos(F.vert[k]);
-			XRay::Math::TransformTiny(xform, p[k], F.vert[k]);
+			xform.TransformTiny( p[k], F.vert[k]);
 		}
 		Fvector test_normal;
 		test_normal.mknormal(p[0], p[1], p[2]);
@@ -1002,7 +1002,7 @@ void CSkeletonX_ext::_FillVerticesHW1W(const Matrix4x4& view, CSkeletonWallmark&
 			Fvector				UV;
 			for (u32 k = 0; k<3; k++){
 				Fvector2& uv = F.uv[k];
-				XRay::Math::TransformTiny(view, UV, p[k]);
+				view.TransformTiny( UV, p[k]);
 				uv.x = (1 + UV.x)*.5f;
 				uv.y = (1 - UV.y)*.5f;
 			}
@@ -1038,8 +1038,8 @@ void CSkeletonX_ext::_FillVerticesHW2W(const Matrix4x4& view, CSkeletonWallmark&
 			Matrix4x4& xform0 = Parent->LL_GetBoneInstance(F.bone_id[k][0]).mRenderTransform;
 			Matrix4x4& xform1 = Parent->LL_GetBoneInstance(F.bone_id[k][1]).mRenderTransform;
 			vert.get_pos(F.vert[k]);
-			XRay::Math::TransformTiny(xform0, P0, F.vert[k]);
-			XRay::Math::TransformTiny(xform1, P1, F.vert[k]);
+			xform0.TransformTiny( P0, F.vert[k]);
+			xform1.TransformTiny( P1, F.vert[k]);
 			p[k].lerp(P0, P1, F.weight[k][0]);
 		}
 		Fvector test_normal;
@@ -1052,7 +1052,7 @@ void CSkeletonX_ext::_FillVerticesHW2W(const Matrix4x4& view, CSkeletonWallmark&
 			Fvector				UV;
 			for (u32 k = 0; k<3; k++){
 				Fvector2& uv = F.uv[k];
-				XRay::Math::TransformTiny(view, UV, p[k]);
+				view.TransformTiny( UV, p[k]);
 				uv.x = (1 + UV.x)*.5f;
 				uv.y = (1 - UV.y)*.5f;
 			}
@@ -1097,7 +1097,7 @@ void CSkeletonX_ext::_FillVerticesHW3W(const Matrix4x4& view, CSkeletonWallmark&
 			Fvector                UV;
 			for (u32 k = 0; k<3; k++) {
 				Fvector2& uv = F.uv[k];
-				XRay::Math::TransformTiny(view, UV, p[k]);
+				view.TransformTiny( UV, p[k]);
 				uv.x = (1 + UV.x)*.5f;
 				uv.y = (1 - UV.y)*.5f;
 			}
@@ -1142,7 +1142,7 @@ void CSkeletonX_ext::_FillVerticesHW4W(const Matrix4x4& view, CSkeletonWallmark&
 			Fvector                UV;
 			for (u32 k = 0; k<3; k++) {
 				Fvector2& uv = F.uv[k];
-				XRay::Math::TransformTiny(view, UV, p[k]);
+				view.TransformTiny( UV, p[k]);
 				uv.x = (1 + UV.x)*.5f;
 				uv.y = (1 - UV.y)*.5f;
 			}

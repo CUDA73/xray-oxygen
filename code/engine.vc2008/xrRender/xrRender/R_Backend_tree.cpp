@@ -20,12 +20,12 @@ void	R_tree::unmap		()
 	c_c_sun		= 0;
 }
 
-void	R_tree::set_m_xform_v	(Fmatrix& mat)
+void	R_tree::set_m_xform_v	(Matrix4x4& mat)
 {
 	if (c_m_xform_v) RCache.set_c(c_m_xform_v, mat);
 }
 
-void	R_tree::set_m_xform	(Fmatrix& mat)
+void	R_tree::set_m_xform	(Matrix4x4& mat)
 {
 	if (c_m_xform) RCache.set_c(c_m_xform, mat);
 }

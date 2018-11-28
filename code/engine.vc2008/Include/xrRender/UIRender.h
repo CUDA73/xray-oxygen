@@ -44,6 +44,6 @@ public:
 
 	virtual LPCSTR	UpdateShaderName(LPCSTR tex_name, LPCSTR sh_name) = 0;
 
-	virtual void	CacheSetXformWorld	(const Fmatrix& M) = 0;
+	virtual void	CacheSetXformWorld	(const Matrix4x4& M) = 0;
 	virtual void	CacheSetCullMode	(CullMode) = 0;
 };

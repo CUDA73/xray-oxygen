@@ -406,7 +406,7 @@ void dxRenderDeviceRender::ClearTarget()
 #endif
 }
 
-void dxRenderDeviceRender::SetCacheXform(const Fmatrix &mView, const Fmatrix &mProject)
+void dxRenderDeviceRender::SetCacheXform(const Matrix4x4 &mView, const Matrix4x4 &mProject)
 {
 	RCache.set_xform_view(mView);
 	RCache.set_xform_project(mProject);

@@ -451,7 +451,7 @@ void ParticleRenderStream(LPVOID lpvParams)
 				M.SetHPB(-pPE.m_Def->m_APDefaultRotation.x, -pPE.m_Def->m_APDefaultRotation.y, -pPE.m_Def->m_APDefaultRotation.z);
 				if (pPE.m_RT_Flags.is(CParticleEffect::flRT_XFORM)) {
 					Fvector p;
-					XRay::Math::TransformTiny(pPE.m_XFORM, p, m.pos);
+					pPE.m_XFORM.TransformTiny( p, m.pos);
 					M.Multiply43(M, pPE.m_XFORM);
 					FillSprite(pv, M.z, M.x, p, lt, rb, r_x, r_y, m.color, sina, cosa);
 				}
@@ -471,7 +471,7 @@ void ParticleRenderStream(LPVOID lpvParams)
 				if (pPE.m_RT_Flags.is(CParticleEffect::flRT_XFORM)) 
 				{
 					Fvector p;
-					XRay::Math::TransformTiny(pPE.m_XFORM, p, m.pos);
+					pPE.m_XFORM.TransformTiny( p, m.pos);
 					M.Multiply43(M, pPE.m_XFORM);
 					FillSprite(pv, M.z, M.x, p, lt, rb, r_x, r_y, m.color, sina, cosa);
 				}
@@ -485,7 +485,7 @@ void ParticleRenderStream(LPVOID lpvParams)
 				else				dir.setHP(-pPE.m_Def->m_APDefaultRotation.y, -pPE.m_Def->m_APDefaultRotation.x);
 				if (pPE.m_RT_Flags.is(CParticleEffect::flRT_XFORM)) {
 					Fvector p, d;
-					XRay::Math::TransformTiny(pPE.m_XFORM, p, m.pos);
+					pPE.m_XFORM.TransformTiny( p, m.pos);
 					XRay::Math::TransformDirByMatrix(pPE.m_XFORM, d, dir);
 					FillSprite(pv, p, d, lt, rb, r_x, r_y, m.color, sina, cosa);
 				}
@@ -497,7 +497,7 @@ void ParticleRenderStream(LPVOID lpvParams)
 		else {
 			if (pPE.m_RT_Flags.is(CParticleEffect::flRT_XFORM)) {
 				Fvector p;
-				XRay::Math::TransformTiny(pPE.m_XFORM, p, m.pos);
+				pPE.m_XFORM.TransformTiny( p, m.pos);
 				FillSprite(pv, RDEVICE.vCameraTop, RDEVICE.vCameraRight, p, lt, rb, r_x, r_y, m.color, sina, cosa);
 			}
 			else {

@@ -33,9 +33,9 @@ public:
 	void	__stdcall	PerformAllTheWork_mt();
 
 	Fvector& Position();
-	void SetXFORM(const Fmatrix& m);
+	void SetXFORM(const Matrix4x4& m);
 
-	void UpdateParent(const Fmatrix& m, const Fvector& vel);
+	void UpdateParent(const Matrix4x4& m, const Fvector& vel);
 
 	void play_at_pos(const Fvector& pos, BOOL xform = FALSE);
 	virtual void Play(bool bHudMode);
@@ -49,7 +49,7 @@ public:
 
 	const shared_str Name();
 
-	inline	Fmatrix& XFORM() { return renderable.xform; }
+	inline	Matrix4x4& XFORM() { return renderable.xform; }
 
 public:
 	static CParticlesObject* Create(LPCSTR p_name, BOOL bAutoRemove = TRUE, bool remove_on_game_load = true)

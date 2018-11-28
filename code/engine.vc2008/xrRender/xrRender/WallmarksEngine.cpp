@@ -130,14 +130,14 @@ void CWallmarksEngine::RecurseTri(u32 t, Matrix4x4 &mView, CWallmarksEngine::sta
 		FVF::LIT			V0,V1,V2;
 		Fvector				UV;
 
-		XRay::Math::TransformTiny(mView, UV, (*P)[0]);
+		mView.TransformTiny(UV, (*P)[0]);
 		V0.set				((*P)[0],0,(1+UV.x)*.5f,(1-UV.y)*.5f);
-		XRay::Math::TransformTiny(mView, UV, (*P)[1]);
+		mView.TransformTiny(UV, (*P)[1]);
 		V1.set				((*P)[1],0,(1+UV.x)*.5f,(1-UV.y)*.5f);
 
 		for (u32 i=2; i<P->size(); i++)
 		{
-			XRay::Math::TransformTiny(mView, UV, (*P)[i]);
+			mView.TransformTiny(UV, (*P)[i]);
 			V2.set				((*P)[i],0,(1+UV.x)*.5f,(1-UV.y)*.5f);
 			W.verts.push_back	(V0);
 			W.verts.push_back	(V1);

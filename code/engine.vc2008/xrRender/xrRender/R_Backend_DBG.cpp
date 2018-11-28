@@ -36,13 +36,13 @@ void CBackend::dbg_Draw			(D3DPRIMITIVETYPE T, FVF::L* pVerts, int pcnt)
 }
 
 #define RGBA_GETALPHA(rgb)      ((rgb) >> 24)
-void CBackend::dbg_DrawOBB		(Fmatrix& T, Fvector& half_dim, u32 C)
+void CBackend::dbg_DrawOBB		(Matrix4x4& T, Fvector& half_dim, u32 C)
 {
-	Fmatrix mL2W_Transform,mScaleTransform;
+	Matrix4x4 mL2W_Transform,mScaleTransform;
 
-	mScaleTransform.scale(half_dim);
-	mL2W_Transform.mul_43(T,mScaleTransform);
-
+	mScaleTransform = DirectX::XMMatrixScaling(half_dim.x, half_dim.y, half_dim.z);
+	mL2W_Transform.Multiply43(mScaleTransform, T);
+	
 	FVF::L  aabb[8];
 	aabb[0].set( -1, -1, -1, C ); // 0
 	aabb[1].set( -1, +1, -1, C ); // 1
@@ -59,7 +59,7 @@ void CBackend::dbg_DrawOBB		(Fmatrix& T, Fvector& half_dim, u32 C)
 	set_xform_world	(mL2W_Transform);
 	dbg_Draw(D3DPT_LINELIST,aabb,8,aabb_id,12);
 }
-void CBackend::dbg_DrawTRI	(Fmatrix& T, Fvector& p1, Fvector& p2, Fvector& p3, u32 C)
+void CBackend::dbg_DrawTRI	(Matrix4x4& T, Fvector& p1, Fvector& p2, Fvector& p3, u32 C)
 {
 	FVF::L	tri[3];
 	tri[0].p = p1; tri[0].color = C;
@@ -69,7 +69,7 @@ void CBackend::dbg_DrawTRI	(Fmatrix& T, Fvector& p1, Fvector& p2, Fvector& p3, u
 	set_xform_world	(T);
 	dbg_Draw(D3DPT_TRIANGLESTRIP,tri,1);
 }
-void CBackend::dbg_DrawLINE(Fmatrix& T, Fvector& p1, Fvector& p2, u32 C)
+void CBackend::dbg_DrawLINE(Matrix4x4& T, Fvector& p1, Fvector& p2, u32 C)
 {
 	FVF::L	line[2];
 	line[0].p = p1; line[0].color = C;
@@ -78,7 +78,7 @@ void CBackend::dbg_DrawLINE(Fmatrix& T, Fvector& p1, Fvector& p2, u32 C)
 	set_xform_world	(T);
 	dbg_Draw(D3DPT_LINELIST,line,1);
 }
-void CBackend::dbg_DrawEllipse(Fmatrix& T, u32 C)
+void CBackend::dbg_DrawEllipse(Matrix4x4& T, u32 C)
 {
 	float gVertices[] =
 	{

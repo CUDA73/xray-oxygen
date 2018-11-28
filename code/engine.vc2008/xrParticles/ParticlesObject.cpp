@@ -74,7 +74,7 @@ void CParticlesObject::UpdateSpatial()
 	if (_valid(vis.sphere))
 	{
 		Fvector	P;	float	R;
-		renderable.xform.transform_tiny(P, vis.sphere.P);
+		renderable.xform.TransformTiny(P, vis.sphere.P);
 		R = vis.sphere.R;
 		if (0 == spatial.type)
 		{
@@ -127,7 +127,7 @@ void CParticlesObject::Play(bool bHudMode)
 void CParticlesObject::play_at_pos(const Fvector& pos, BOOL xform)
 {
 	IParticleCustom* V = imdexlib::fast_dynamic_cast<IParticleCustom*>(renderable.visual); VERIFY(V);
-	Fmatrix m; m.translate(pos);
+	Matrix4x4 m; m.Translate(pos);
 	V->UpdateParent(m, zero_vel, xform);
 	V->Play();
 	dwLastTime = Device.dwTimeGlobal - 33ul;
@@ -188,15 +188,15 @@ void CParticlesObject::PerformAllTheWork_mt()
 	mt_dt = 0;
 }
 
-void CParticlesObject::SetXFORM(const Fmatrix& m)
+void CParticlesObject::SetXFORM(const Matrix4x4& m)
 {
 	IParticleCustom* V = imdexlib::fast_dynamic_cast<IParticleCustom*>(renderable.visual); VERIFY(V);
 	V->UpdateParent(m, zero_vel, TRUE);
-	renderable.xform.set(m);
+	renderable.xform = (m);
 	UpdateSpatial();
 }
 
-void CParticlesObject::UpdateParent(const Fmatrix& m, const Fvector& vel)
+void CParticlesObject::UpdateParent(const Matrix4x4& m, const Fvector& vel)
 {
 	IParticleCustom* V = imdexlib::fast_dynamic_cast<IParticleCustom*>(renderable.visual); VERIFY(V);
 	if (V)

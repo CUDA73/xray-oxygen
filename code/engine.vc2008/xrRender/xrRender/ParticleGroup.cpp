@@ -205,12 +205,12 @@ void CParticleGroup::SItem::StartRelatedChild(CParticleEffect* emitter, LPCSTR e
     Matrix4x4 M; 				M.Identity();
     Fvector vel; 			vel.sub(m.pos,m.posB); vel.div(fDT_STEP);
     if (emitter->m_RT_Flags.is(CParticleEffect::flRT_XFORM)){
-        M.set				(emitter->m_XFORM);
-        M.transform_dir		(vel);
+        M = (emitter->m_XFORM);
+        M.TransformDir		(vel);
     };
     Fvector 				p;
-    M.transform_tiny		(p,m.pos);
-    M.c.set					(p);
+    M.TransformTiny		(p,m.pos);
+    M.w = (p);
     C->Play					();
     C->UpdateParent			(M,vel,FALSE);
     _children_related.push_back(C);
@@ -233,12 +233,12 @@ void CParticleGroup::SItem::StartFreeChild(CParticleEffect* emitter, LPCSTR nm, 
         Matrix4x4 M; 				M.Identity();
         Fvector vel; 			vel.sub(m.pos,m.posB); vel.div(fDT_STEP);
         if (emitter->m_RT_Flags.is(CParticleEffect::flRT_XFORM)){
-        	M.set				(emitter->m_XFORM);
-            M.transform_dir		(vel);
+        	M = (emitter->m_XFORM);
+            M.TransformDir		(vel);
         };
         Fvector 				p;
-        M.transform_tiny		(p,m.pos);
-        M.c.set					(p);
+        M.TransformTiny		(p,m.pos);
+        M.w = (p);
         C->Play					();
         C->UpdateParent			(M,vel,FALSE);
         _children_free.push_back(C);
@@ -289,7 +289,7 @@ BOOL CParticleGroup::SItem::IsPlaying() const
     CParticleEffect* E	= static_cast<CParticleEffect*>(_effect);
     return E?E->IsPlaying():FALSE;
 }
-void CParticleGroup::SItem::UpdateParent(const Fmatrix& m, const Fvector& velocity, BOOL bXFORM)
+void CParticleGroup::SItem::UpdateParent(const Matrix4x4& m, const Fvector& velocity, BOOL bXFORM)
 {
     CParticleEffect* E	= static_cast<CParticleEffect*>(_effect);
     if (E) E->UpdateParent(m,velocity,bXFORM);
@@ -342,7 +342,7 @@ void CParticleGroup::SItem::OnFrame(u32 u_dt, const CPGDef::SEffect& def, Fbox& 
                     for(u32 i = 0; i < p_cnt; i++){
                         PAPI::Particle &m	= particles[i]; 
                         CParticleEffect* C 	= static_cast<CParticleEffect*>(_children_related[i]);
-                        Fmatrix M; 			M.translate(m.pos);
+                        Matrix4x4 M; 			M.Translate(m.pos);
                         Fvector vel; 		vel.sub(m.pos,m.posB); vel.div(fDT_STEP);
                         C->UpdateParent		(M,vel,FALSE);
                     }
@@ -475,9 +475,9 @@ void CParticleGroup::OnFrame(u32 u_dt)
 	}
 }
 
-void CParticleGroup::UpdateParent(const Fmatrix& m, const Fvector& velocity, BOOL bXFORM)
+void CParticleGroup::UpdateParent(const Matrix4x4& m, const Fvector& velocity, BOOL bXFORM)
 {
-	m_InitialPosition		= m.c;
+	m_InitialPosition		= m.w;
     for (auto i_it=items.begin(); i_it!=items.end(); i_it++)
     	i_it->UpdateParent(m,velocity,bXFORM);
 }

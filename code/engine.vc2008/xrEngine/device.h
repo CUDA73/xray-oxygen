@@ -171,7 +171,7 @@ public:
 			m_bNearer = FALSE;
 			mProject.Matrix.r[1].m128_f32[3] += EPS_L;
 		}
-		m_pRender->SetCacheXform(CastToGSCMatrix(mView), CastToGSCMatrix(mProject));
+		m_pRender->SetCacheXform(mView, mProject);
 	}
 public:
 	// Registrators

@@ -101,17 +101,17 @@ public:
 
 	// Geometry xform
 	virtual void						Center				(Fvector& C) const;
-	IC const Fmatrix&					XFORM				()			 const	{ VERIFY(_valid(renderable.xform));	return renderable.xform;	}
-	ICF Fmatrix&						XFORM				()					{ return renderable.xform;			}
+	IC const Matrix4x4&					XFORM				()			 const	{ VERIFY(_valid(renderable.xform));	return renderable.xform;	}
+	ICF Matrix4x4&						XFORM				()					{ return renderable.xform;			}
 	void								spatial_register	() override;
 	void								spatial_unregister	() override;
 	void								spatial_move		() override;
 	void								spatial_update		(float eps_P, float eps_R);
 
-	ICF Fvector&						Direction			() 					{ return renderable.xform.k;		}
-	ICF const Fvector&					Direction			() 			const	{ return renderable.xform.k;		}
-	ICF Fvector&						Position			() 					{ return renderable.xform.c;		}
-	ICF const Fvector&					Position			() 			const	{ return renderable.xform.c;		}
+	ICF Fvector&						Direction			() 					{ return renderable.xform.z;		}
+	ICF const Fvector&					Direction			() 			const	{ return renderable.xform.z;		}
+	ICF Fvector&						Position			() 					{ return renderable.xform.w;		}
+	ICF const Fvector&					Position			() 			const	{ return renderable.xform.w;		}
 	virtual float						Radius				()			const;
 	virtual const Fbox&					BoundingBox			()			const;
 	

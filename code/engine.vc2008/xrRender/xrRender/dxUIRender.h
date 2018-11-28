@@ -22,7 +22,7 @@ public:
 
 	virtual LPCSTR	UpdateShaderName(LPCSTR tex_name, LPCSTR sh_name);
 
-	virtual void	CacheSetXformWorld	(const Fmatrix& M);
+	virtual void	CacheSetXformWorld	(const Matrix4x4& M);
 	virtual void	CacheSetCullMode	(CullMode);
 
 private:

@@ -123,8 +123,8 @@ void FTreeVisual::Render	(float LOD)
 	if (tvs.dwFrame!=Device.dwFrame)	tvs.calculate();
 	// setup constants
 
-	Fmatrix xform_v;
-	xform_v.mul_43(RCache.get_xform_view(),xform);
+	Matrix4x4 xform_v;
+	xform_v.Multiply43(xform, RCache.get_xform_view());
 	RCache.tree.set_m_xform_v(xform_v); // matrix
 
 	float s = ps_r_Tree_SBC;

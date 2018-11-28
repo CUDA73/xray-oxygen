@@ -94,7 +94,7 @@ namespace PS
             void			StopRelatedChild	(u32 idx);
             void			StartFreeChild		(CParticleEffect* emitter, LPCSTR eff_name, PAPI::Particle& m);
 
-            void 			UpdateParent	(const Fmatrix& m, const Fvector& velocity, BOOL bXFORM);
+            void 			UpdateParent	(const Matrix4x4& m, const Fvector& velocity, BOOL bXFORM);
             void			OnFrame			(u32 u_dt, const CPGDef::SEffect& def, Fbox& box, bool& bPlaying);
 
             u32				ParticlesCount	();
@@ -120,7 +120,7 @@ namespace PS
 		virtual void 		OnDeviceCreate	();
 		virtual void 		OnDeviceDestroy	();
 
-		virtual void		UpdateParent	(const Fmatrix& m, const Fvector& velocity, BOOL bXFORM);
+		virtual void		UpdateParent	(const Matrix4x4& m, const Fvector& velocity, BOOL bXFORM);
 
 		BOOL				Compile			(CPGDef* def);
 

@@ -118,7 +118,7 @@ void CCF_Skeleton::BuildState()
 	IRenderVisual* pVisual = owner->Visual();
 	IKinematics* K		= PKinematics(pVisual);
 	K->CalculateBones();
-	const Fmatrix& L2W	= owner->XFORM();
+	const Matrix4x4& L2W	= owner->XFORM();
 	
 	if (vis_mask!=K->LL_GetBonesVisible()){
 		vis_mask		= K->LL_GetBonesVisible();
@@ -138,7 +138,7 @@ void CCF_Skeleton::BuildState()
 		if (!I->valid())		continue;
 		SBoneShape&	shape		= K->LL_GetData(I->elem_id).shape;
 		Fmatrix					ME,T,TW;
-		const Fmatrix& Mbone	= K->LL_GetTransform(I->elem_id);
+		const Matrix4x4& Mbone	= K->LL_GetTransform(I->elem_id);
 
 		VERIFY_FORMAT( DET(Mbone)>EPS, "0 scale bone matrix, %d %s\n", I->elem_id, dbg_object_full_dump_string( owner ).c_str() );
 
@@ -164,16 +164,16 @@ void CCF_Skeleton::BuildState()
 								   }break;
 			case SBoneShape::stSphere:{
 				const Fsphere& S	= shape.sphere;
-				Mbone.transform_tiny(I->s_sphere.P,S.P);
-				L2W.transform_tiny	(I->s_sphere.P);
+				Mbone.TransformTiny(I->s_sphere.P,S.P);
+				L2W.TransformTiny	(I->s_sphere.P);
 				I->s_sphere.R		= S.R;
 			}break;
 			case SBoneShape::stCylinder:{
 				const Fcylinder& C	= shape.cylinder;
-				Mbone.transform_tiny(I->c_cylinder.m_center,C.m_center);
-				L2W.transform_tiny	(I->c_cylinder.m_center);
-				Mbone.transform_dir	(I->c_cylinder.m_direction,C.m_direction);
-				L2W.transform_dir	(I->c_cylinder.m_direction);
+				Mbone.TransformTiny(I->c_cylinder.m_center,C.m_center);
+				L2W.TransformTiny	(I->c_cylinder.m_center);
+				Mbone.TransformDir	(I->c_cylinder.m_direction,C.m_direction);
+				L2W.TransformDir	(I->c_cylinder.m_direction);
 				I->c_cylinder.m_height	= C.m_height;
 				I->c_cylinder.m_radius	= C.m_radius;
 			}break;
@@ -201,7 +201,7 @@ BOOL CCF_Skeleton::_RayQuery( const collide::ray_defs& Q, collide::rq_results& R
 	if (dwFrameTL!=Device.dwFrame)			BuildTopLevel();
 
 	Fsphere w_bv_sphere;
-	owner->XFORM().transform_tiny		(w_bv_sphere.P,bv_sphere.P);
+	owner->XFORM().TransformTiny		(w_bv_sphere.P,bv_sphere.P);
 	w_bv_sphere.R						= bv_sphere.R;
 
 	// 
@@ -260,14 +260,14 @@ CCF_EventBox::CCF_EventBox( CObject* O ) : ICollisionForm(O,cftShape)
 	A[6].set( +1, -1, +1);
 	A[7].set( +1, -1, -1);
 
-	const Fmatrix& T = O->XFORM();
+	const Matrix4x4& T = O->XFORM();
 	for (int i=0; i<8; i++) {
 		A[i].mul(.5f);
-		T.transform_tiny(B[i],A[i]);
+		T.TransformTiny(B[i],A[i]);
 	}
 	bv_box.set		(-.5f,-.5f,-.5f,+.5f,+.5f,+.5f);
 	Fvector R; R.set(bv_box.min);
-	T.transform_dir	(R);
+	T.TransformDir	(R);
 	bv_sphere.R		= R.magnitude();
 
 	Planes[0].build(B[0],B[3],B[5]);
@@ -286,7 +286,7 @@ BOOL CCF_EventBox::Contact(CObject* O)
 	float			R	= vis.sphere.R;
 	
 	Fvector			PT;
-	O->XFORM().transform_tiny(PT,P);
+	O->XFORM().TransformTiny(PT,P);
 	
 	for (int i=0; i<6; i++) {
 		if (Planes[i].classify(PT)>R) return FALSE;
@@ -310,10 +310,10 @@ BOOL CCF_Shape::_RayQuery(const collide::ray_defs& Q, collide::rq_results& R)
 {	
 	// Convert ray into local model space
 	Fvector dS, dD;
-	Fmatrix temp; 
-	temp.invert			(owner->XFORM());
-	temp.transform_tiny	(dS,Q.start);
-	temp.transform_dir	(dD,Q.dir);
+	Matrix4x4 temp; 
+	temp.InvertMatrixByMatrix(owner->XFORM());
+	temp.TransformTiny	(dS,Q.start);
+	temp.TransformDir	(dD,Q.dir);
 
 	// 
 	if (!bv_sphere.intersect(dS,dD))	return FALSE;
@@ -428,11 +428,11 @@ BOOL CCF_Shape::Contact		( CObject* O )
 		S.R				= O->Radius();
 	}else if (O->CFORM()){
 		S = O->CFORM()->getSphere();
-		O->XFORM().transform_tiny(S.P);
+		O->XFORM().TransformTiny(S.P);
 	}else return FALSE;
 	
 	// Get our matrix
-	const Fmatrix& XF	= Owner()->XFORM();
+	const Matrix4x4& XF	= Owner()->XFORM();
 	
 	// Iterate
 	for (u32 el=0; el<shapes.size(); el++)
@@ -443,7 +443,7 @@ BOOL CCF_Shape::Contact		( CObject* O )
 			{
 				Fsphere		Q;
 				Fsphere&	T		= shapes[el].data.sphere;
-				XF.transform_tiny	(Q.P,T.P);
+				XF.TransformTiny	(Q.P,T.P);
 				Q.R					= T.R;
 				if (S.intersect(Q))	return TRUE;
 			}

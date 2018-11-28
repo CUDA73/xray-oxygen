@@ -38,273 +38,6 @@ namespace XRay
 			};
 		};
 
-		struct Matrix4x4
-		{
-			struct IntricsVect
-			{
-				DirectX::XMVECTOR Vect;
-
-			public:
-				inline void	div(Fvector a, const float s) 
-				{ 
-					 Vect.m128_f32[0] = a.x / s;		
-					 Vect.m128_f32[1] = a.y / s;	
-					 Vect.m128_f32[2] = a.z / s;
-				}
-
-				DirectX::XMVECTOR operator()()
-				{
-					return Vect;
-				};
-
-				float& operator[](size_t id)
-				{
-					return Vect.m128_f32[id];
-				}
-
-				const float& operator[](size_t id) const 
-				{
-					return Vect.m128_f32[id];
-				}
-
-				void operator=(DirectX::XMVECTOR &VectObj)
-				{
-					Vect = VectObj;
-				}
-
-				void operator=(const Fvector &VectObj)
-				{
-					Vect = { VectObj.x, VectObj.y, VectObj.z, Vect.m128_f32[3] };
-				}
-
-				inline operator Fvector()
-				{
-					return Fvector().set(Vect.m128_f32[0], Vect.m128_f32[1], Vect.m128_f32[2]);
-				}
-			};
-
-		protected:
-			/// <summary>Half fov <-> angle <-> tangent</summary>
-			inline void build_projection_HAT(float HAT, float fAspect, float fNearPlane, float fFarPlane, DirectX::XMMATRIX &Matrics);
-
-		public:
-			Matrix4x4(DirectX::XMMATRIX a) 
-			{ 
-				Matrix = a;
-
-				x = Matrix.r[0];
-				y = Matrix.r[1];
-				z = Matrix.r[2];
-				w = Matrix.r[3];
-			}
-
-			Matrix4x4(float val = 0.f)
-			{
-
-				Matrix =
-				{
-					val, val, val, val,
-					val, val, val, val,
-					val, val, val, val,
-					val, val, val, val
-				};
-
-				x = Matrix.r[0];
-				y = Matrix.r[1];
-				z = Matrix.r[2];
-				w = Matrix.r[3];
-			}
-
-			Matrix4x4
-			(
-				float a1, float a2, float a3, float a4,
-				float b1, float b2, float b3, float b4,
-				float c1, float c2, float c3, float c4,
-				float d1, float d2, float d3, float d4
-			)
-			{
-				Matrix =
-				{
-					a1, a2, a3, a4,
-					b1, b2, b3, b4,
-					c1, c2, c3, c4,
-					d1, d2, d3, d4
-				};
-
-				x = Matrix.r[0];
-				y = Matrix.r[1];
-				z = Matrix.r[2];
-				w = Matrix.r[3];
-			}
-
-			/// <summary>Generate new cam direction </summary>
-			inline void BuildCamDir(const Fvector &vFrom, const Fvector &vView, const Fvector &vWorldUp);
-			/// <summary>Generate new a Matrix Projection</summary>
-			inline void BuildProj(float fFOV, float fAspect, float fNearPlane, float fFarPlane);
-			/// <summary>Generate new ortho projection to matrix </summary>
-			inline void BuildProjOrtho(float w, float h, float zn, float zf);
-
-			inline void Identity()
-			{
-				Matrix = DirectX::XMMatrixIdentity();
-			}
-
-			inline	void SetHPB(float h, float p, float b);
-
-			/// <summary>Multiplication matrix by matrix</summary>
-			inline void Multiply(Matrix4x4 a, Matrix4x4 b) { Matrix = DirectX::XMMatrixMultiply(a, b); }
-
-			inline void Multiply43(Matrix4x4 a, Matrix4x4 b) 
-			{ 
-				Matrix = DirectX::XMMatrixMultiply(a, b); 
-				x[3] = 0;
-				y[3] = 0;
-				z[3] = 0;
-				w[3] = 1;
-			}
-
-			/// <summary>Inversion matrix by matrix</summary>
-			inline void InvertMatrixByMatrix(const DirectX::XMMATRIX &a);
-			inline void InvertMatrixByMatrix43(const DirectX::XMMATRIX &a);
-			/// <summary>Call Fbox::xform for DirectX::XMMATRIX</summary>
-			inline void BuildXForm(Fbox &B);
-
-			inline void Translate(Fvector3 diff)
-			{
-				Matrix = DirectX::XMMatrixTranslation(diff.x, diff.y, diff.z);
-			}
-
-			inline void Inverse(DirectX::XMVECTOR* pDeterminant, const DirectX::XMMATRIX& refMatrix)
-			{
-				Matrix = DirectX::XMMatrixInverse(pDeterminant, refMatrix);
-			}
-
-			inline void Transform(Fvector &dest, const Fvector &v) const noexcept
-			{
-				XRay::Math::TransformVectorsByMatrix(Matrix, dest, v);
-			}
-
-			inline void Transform(Fvector &dest) const noexcept
-			{
-				XRay::Math::TransformByMatrix(Matrix, dest);
-			}
-
-			inline void TransformTiny(Fvector &dest, const Fvector &v) const noexcept
-			{
-				XRay::Math::TransformTiny(Matrix, dest, v);
-			}
-
-			inline void TransformTiny(Fvector &dest) const
-			{
-				XRay::Math::TransformTiny(Matrix, dest);
-			}
-
-			inline void TranslateOver(const Fvector &v)
-			{
-				w = { v.x, v.y, v.z, w[3] };
-			}
-
-			inline void mk_xform(const _quaternion<float> &Q, const Fvector &V)
-			{
-				float xx = Q.x*Q.x; float yy = Q.y*Q.y; float zz = Q.z*Q.z;
-				float xy = Q.x*Q.y; float xz = Q.x*Q.z; float yz = Q.y*Q.z;
-				float wx = Q.w*Q.x; float wy = Q.w*Q.y; float wz = Q.w*Q.z;
-
-				x[0] = 1 - 2 * (yy + zz);	x[1] = 2 * (xy - wz);		x[2] = 2 * (xz + wy);		x[3] = 0;
-				y[0] = 2 * (xy + wz);		y[1] = 1 - 2 * (xx + zz);	y[2] = 2 * (yz - wx);		y[3] = 0;
-				z[0] = 2 * (xz - wy);		z[1] = 2 * (yz + wx);		z[2] = 1 - 2 * (xx + yy);	z[3] = 0;
-				w[0] = V.x;					w[1] = V.y;					w[2] = V.z;					w[3] = 1;
-			}
-
-		public:
-			union
-			{
-				struct
-				{
-					IntricsVect x;
-					IntricsVect y;
-					IntricsVect z;
-					IntricsVect w;
-				};
-
-				DirectX::XMMATRIX Matrix;
-			};
-						
-		public:
-			inline operator Fmatrix () { return CastToGSCMatrix(Matrix); }
-			inline operator Fmatrix () const { return CastToGSCMatrix(Matrix); }
-			inline operator DirectX::XMMATRIX() { return Matrix; }
-			inline operator DirectX::XMMATRIX() const { return Matrix; }
-			inline void operator= (const DirectX::XMMATRIX &a) { Matrix = a; }
-			inline void operator= (const Matrix4x4 &a) { Matrix = a.Matrix; }
-			inline void operator= (const Fmatrix &a)
-			{
-				Matrix =
-				{
-					a._11, a._12, a._13, a._14,
-					a._21, a._22, a._23, a._24,
-					a._31, a._32, a._33, a._34,
-					a._41, a._42, a._43, a._44
-				};
-			}
-		};
-
-		inline void Matrix4x4::BuildCamDir(const Fvector &vFrom, const Fvector &vView, const Fvector &vWorldUp)
-		{
-			// Get the dot product, and calculate the projection of the z basis
-			// vector3 onto the up vector3. The projection is the y basis vector3.
-			float fDotProduct = vWorldUp.dotproduct(vView);
-
-			Fvector vUp;
-			vUp.mul(vView, -fDotProduct).add(vWorldUp).normalize();
-
-			// The x basis vector3 is found simply with the cross product of the y
-			// and z basis vectors
-			Fvector vRight;
-			vRight.crossproduct(vUp, vView);
-
-			// Start building the Device.mView. The first three rows contains the basis
-			// vectors used to rotate the view to point at the lookat point
-			Matrix = DirectX::XMMATRIX(
-				vRight.x, vUp.x, vView.x, 0.0f,
-				vRight.y, vUp.y, vView.y, 0.0f,
-				vRight.z, vUp.z, vView.z, 0.0f,
-				-vFrom.dotproduct(vRight), -vFrom.dotproduct(vUp), -vFrom.dotproduct(vView), 1.f);
-		}
-
-		inline void Matrix4x4::build_projection_HAT(float HAT, float fAspect, float fNearPlane, float fFarPlane, DirectX::XMMATRIX &Matrics)
-		{
-			float cot = 1.f / HAT;
-			float W = fAspect * cot;
-			float h = 1.f * cot;
-			float Q = fFarPlane / (fFarPlane - fNearPlane);
-
-			Matrics = DirectX::XMMATRIX(
-				W, 0, 0, 0,
-				0, h, 0, 0,
-				0, 0, Q, 1.f,
-				0, 0, -Q * fNearPlane, 0);
-		}
-
-		inline void Matrix4x4::BuildProj(float fFOV, float fAspect, float fNearPlane, float fFarPlane)
-		{
-			return build_projection_HAT(tanf(fFOV / 2.f), fAspect, fNearPlane, fFarPlane, Matrix);
-		}
-
-		inline void Matrix4x4::BuildProjOrtho(float W, float h, float zn, float zf)
-		{
-			Matrix = DirectX::XMMATRIX(
-				2.f / W, 0, 0, 0,
-				0, 2.f / h, 0, 0,
-				0, 0, 1.f / (zf - zn), 0,
-				0, 0, zn / (zn - zf), 1.f);
-		}
-
-		inline void Matrix4x4::BuildXForm(Fbox &B)
-		{
-			B.xform(CastToGSCMatrix(Matrix));
-		}
-
 		/// <summary>GSC Transform func for DirectX::XMMATRIX</summary>
 		inline void TransformVectorsByMatrix(const DirectX::XMMATRIX &m, Fvector &dest, const Fvector &v)
 		{
@@ -314,6 +47,17 @@ namespace XRay
 			dest.y = (v.x* m.r[0].m128_f32[1] + v.y* m.r[1].m128_f32[1] + v.z* m.r[2].m128_f32[1] + m.r[3].m128_f32[1])*iw;
 			dest.z = (v.x* m.r[0].m128_f32[2] + v.y* m.r[1].m128_f32[2] + v.z* m.r[2].m128_f32[2] + m.r[3].m128_f32[2])*iw;
 		}
+
+		inline void TransformVectorsByMatrix(const DirectX::XMMATRIX &m, Fvector4 &dest, const Fvector4 &v)
+		{
+			float iw = 1.f / (v.x*m.r[0].m128_f32[3] + v.y*m.r[1].m128_f32[3] + v.z*m.r[2].m128_f32[3] + v.w*m.r[3].m128_f32[3]);
+
+			dest.x = (v.x* m.r[0].m128_f32[0] + v.y* m.r[1].m128_f32[0] + v.z* m.r[2].m128_f32[0] + m.r[3].m128_f32[0])*iw;
+			dest.y = (v.x* m.r[0].m128_f32[1] + v.y* m.r[1].m128_f32[1] + v.z* m.r[2].m128_f32[1] + m.r[3].m128_f32[1])*iw;
+			dest.z = (v.x* m.r[0].m128_f32[2] + v.y* m.r[1].m128_f32[2] + v.z* m.r[2].m128_f32[2] + m.r[3].m128_f32[2])*iw;
+			dest.w = (v.x* m.r[0].m128_f32[3] + v.y* m.r[1].m128_f32[3] + v.z* m.r[2].m128_f32[3] + m.r[3].m128_f32[3])*iw;
+		}
+
 
 		/// <summary>GSC Transform func for DirectX::XMMATRIX</summary>
 		inline void TransformVector4ByMatrix(const DirectX::XMMATRIX &m, Fvector4 &dest, const Fvector &v)
@@ -348,19 +92,6 @@ namespace XRay
 			dest.z = v.x*m.r[0].m128_f32[2] + v.y*m.r[1].m128_f32[2] + m.r[3].m128_f32[2];
 		}
 
-		inline void TransformTiny(const Matrix4x4 &m, Fvector &dest, const Fvector &v) // preferred to use
-		{
-			dest.x = v.x* m.x[0] + v.y* m.y[0] + v.z* m.z[0] + m.w[0];
-			dest.y = v.x* m.x[1] + v.y* m.y[1] + v.z* m.z[1] + m.w[1];
-			dest.z = v.x* m.x[2] + v.y* m.y[2] + v.z* m.z[2] + m.w[2];
-		}
-
-		inline void TransformTiny(const Matrix4x4 &m, Fvector &v)
-		{
-			Fvector res;
-			TransformTiny(m, res, v);
-			v.set(res);
-		}
 		/// <summary>GSC TransformTiny32 func for DirectX::XMMATRIX</summary>
 		inline void TransformTiny32ByMatrix(const DirectX::XMMATRIX &m, Fvector2 &dest, const Fvector &v)
 		{
@@ -488,6 +219,300 @@ namespace XRay
 			return sqrtf(Flt2.x * Flt2.x + Flt2.y * Flt2.y);
 		}
 
+		struct Matrix4x4
+		{
+			struct IntricsVect
+			{
+				DirectX::XMVECTOR Vect;
+
+			public:
+				inline void	div(Fvector a, const float s)
+				{
+					Vect.m128_f32[0] = a.x / s;
+					Vect.m128_f32[1] = a.y / s;
+					Vect.m128_f32[2] = a.z / s;
+				}
+
+				DirectX::XMVECTOR operator()()
+				{
+					return Vect;
+				};
+
+				float& operator[](size_t id)
+				{
+					return Vect.m128_f32[id];
+				}
+
+				const float& operator[](size_t id) const
+				{
+					return Vect.m128_f32[id];
+				}
+
+				void operator=(DirectX::XMVECTOR &VectObj)
+				{
+					Vect = VectObj;
+				}
+
+				void operator=(const Fvector &VectObj)
+				{
+					Vect = { VectObj.x, VectObj.y, VectObj.z, Vect.m128_f32[3] };
+				}
+
+				inline operator Fvector()
+				{
+					return Fvector().set(Vect.m128_f32[0], Vect.m128_f32[1], Vect.m128_f32[2]);
+				}
+
+				inline operator Fvector&() const
+				{
+					return Fvector().set(Vect.m128_f32[0], Vect.m128_f32[1], Vect.m128_f32[2]);
+				}
+			};
+
+		protected:
+			/// <summary>Half fov <-> angle <-> tangent</summary>
+			inline void build_projection_HAT(float HAT, float fAspect, float fNearPlane, float fFarPlane, DirectX::XMMATRIX &Matrics);
+
+		public:
+			Matrix4x4(DirectX::XMMATRIX a)
+			{
+				Matrix = a;
+
+				x = Matrix.r[0];
+				y = Matrix.r[1];
+				z = Matrix.r[2];
+				w = Matrix.r[3];
+			}
+
+			Matrix4x4(float val = 0.f)
+			{
+
+				Matrix =
+				{
+					val, val, val, val,
+					val, val, val, val,
+					val, val, val, val,
+					val, val, val, val
+				};
+
+				x = Matrix.r[0];
+				y = Matrix.r[1];
+				z = Matrix.r[2];
+				w = Matrix.r[3];
+			}
+
+			Matrix4x4
+			(
+				float a1, float a2, float a3, float a4,
+				float b1, float b2, float b3, float b4,
+				float c1, float c2, float c3, float c4,
+				float d1, float d2, float d3, float d4
+			)
+			{
+				Matrix =
+				{
+					a1, a2, a3, a4,
+					b1, b2, b3, b4,
+					c1, c2, c3, c4,
+					d1, d2, d3, d4
+				};
+
+				x = Matrix.r[0];
+				y = Matrix.r[1];
+				z = Matrix.r[2];
+				w = Matrix.r[3];
+			}
+
+			/// <summary>Generate new cam direction </summary>
+			inline void BuildCamDir(const Fvector &vFrom, const Fvector &vView, const Fvector &vWorldUp);
+			/// <summary>Generate new a Matrix Projection</summary>
+			inline void BuildProj(float fFOV, float fAspect, float fNearPlane, float fFarPlane);
+			/// <summary>Generate new ortho projection to matrix </summary>
+			inline void BuildProjOrtho(float w, float h, float zn, float zf);
+
+			inline void Identity()
+			{
+				Matrix = DirectX::XMMatrixIdentity();
+			}
+
+			inline	void SetHPB(float h, float p, float b);
+
+			/// <summary>Multiplication matrix by matrix</summary>
+			inline void Multiply(Matrix4x4 a, Matrix4x4 b) { Matrix = DirectX::XMMatrixMultiply(a, b); }
+
+			inline void Multiply43(Matrix4x4 a, Matrix4x4 b)
+			{
+				Matrix = DirectX::XMMatrixMultiply(a, b);
+				x[3] = 0;
+				y[3] = 0;
+				z[3] = 0;
+				w[3] = 1;
+			}
+
+			/// <summary>Inversion matrix by matrix</summary>
+			inline void InvertMatrixByMatrix(const DirectX::XMMATRIX &a);
+			inline void InvertMatrixByMatrix43(const DirectX::XMMATRIX &a);
+			/// <summary>Call Fbox::xform for DirectX::XMMATRIX</summary>
+			inline void BuildXForm(Fbox &B);
+
+			inline void Translate(Fvector3 diff)
+			{
+				Matrix = DirectX::XMMatrixTranslation(diff.x, diff.y, diff.z);
+			}
+
+			inline void Inverse(DirectX::XMVECTOR* pDeterminant, const DirectX::XMMATRIX& refMatrix)
+			{
+				Matrix = DirectX::XMMatrixInverse(pDeterminant, refMatrix);
+			}
+
+			inline void Transform(Fvector &dest, const Fvector &v) const noexcept
+			{
+				XRay::Math::TransformVectorsByMatrix(Matrix, dest, v);
+			}
+
+			inline void Transform(Fvector4 &dest, const Fvector4 &v) const noexcept
+			{
+				XRay::Math::TransformVectorsByMatrix(Matrix, dest, v);
+			}
+
+			inline void TransformDir(Fvector &dest, const Fvector &v) const noexcept
+			{
+				XRay::Math::TransformDirByMatrix(Matrix, dest, v);
+			}
+
+			inline void TransformDir(Fvector &dest) const noexcept
+			{
+				XRay::Math::TransformDirByMatrix(Matrix, dest);
+			}
+
+			inline void Transform(Fvector &dest) const noexcept
+			{
+				Fvector res;
+				Transform(res, dest);
+				dest.set(res);
+			}
+
+			inline void TransformTiny(Fvector &dest, const Fvector &v) const noexcept
+			{
+				dest.x = v.x* x[0] + v.y* y[0] + v.z* z[0] + w[0];
+				dest.y = v.x* x[1] + v.y* y[1] + v.z* z[1] + w[1];
+				dest.z = v.x* x[2] + v.y* y[2] + v.z* z[2] + w[2];
+			}
+
+			inline void TransformTiny(Fvector &v) const
+			{
+				Fvector res;
+				TransformTiny(res, v);
+				v.set(res);
+			}
+
+			inline void TranslateOver(const Fvector &v)
+			{
+				w = { v.x, v.y, v.z, w[3] };
+			}
+
+			inline void mk_xform(const _quaternion<float> &Q, const Fvector &V)
+			{
+				float xx = Q.x*Q.x; float yy = Q.y*Q.y; float zz = Q.z*Q.z;
+				float xy = Q.x*Q.y; float xz = Q.x*Q.z; float yz = Q.y*Q.z;
+				float wx = Q.w*Q.x; float wy = Q.w*Q.y; float wz = Q.w*Q.z;
+
+				x[0] = 1 - 2 * (yy + zz);	x[1] = 2 * (xy - wz);		x[2] = 2 * (xz + wy);		x[3] = 0;
+				y[0] = 2 * (xy + wz);		y[1] = 1 - 2 * (xx + zz);	y[2] = 2 * (yz - wx);		y[3] = 0;
+				z[0] = 2 * (xz - wy);		z[1] = 2 * (yz + wx);		z[2] = 1 - 2 * (xx + yy);	z[3] = 0;
+				w[0] = V.x;					w[1] = V.y;					w[2] = V.z;					w[3] = 1;
+			}
+
+		public:
+			union
+			{
+				struct
+				{
+					IntricsVect x;
+					IntricsVect y;
+					IntricsVect z;
+					IntricsVect w;
+				};
+
+				DirectX::XMMATRIX Matrix;
+			};
+
+		public:
+			inline operator Fmatrix () { return CastToGSCMatrix(Matrix); }
+//			inline operator Fmatrix& () { return CastToGSCMatrix(Matrix); }
+			inline operator const Fmatrix& () const { return CastToGSCMatrix(Matrix); }
+			inline operator DirectX::XMMATRIX() { return Matrix; }
+			inline operator DirectX::XMMATRIX() const { return Matrix; }
+			inline void operator= (const DirectX::XMMATRIX &a) { Matrix = a; }
+			inline void operator= (const Matrix4x4 &a) { Matrix = a.Matrix; }
+			inline void operator= (const Fmatrix &a)
+			{
+				Matrix =
+				{
+					a._11, a._12, a._13, a._14,
+					a._21, a._22, a._23, a._24,
+					a._31, a._32, a._33, a._34,
+					a._41, a._42, a._43, a._44
+				};
+			}
+		};
+
+		inline void Matrix4x4::build_projection_HAT(float HAT, float fAspect, float fNearPlane, float fFarPlane, DirectX::XMMATRIX &Matrics)
+		{
+			float cot = 1.f / HAT;
+			float W = fAspect * cot;
+			float h = 1.f * cot;
+			float Q = fFarPlane / (fFarPlane - fNearPlane);
+
+			Matrics = DirectX::XMMATRIX(
+				W, 0, 0, 0,
+				0, h, 0, 0,
+				0, 0, Q, 1.f,
+				0, 0, -Q * fNearPlane, 0);
+		}
+
+		inline void Matrix4x4::BuildProj(float fFOV, float fAspect, float fNearPlane, float fFarPlane)
+		{
+			return build_projection_HAT(tanf(fFOV / 2.f), fAspect, fNearPlane, fFarPlane, Matrix);
+		}
+
+		inline void Matrix4x4::BuildProjOrtho(float W, float h, float zn, float zf)
+		{
+			Matrix = DirectX::XMMATRIX(
+				2.f / W, 0, 0, 0,
+				0, 2.f / h, 0, 0,
+				0, 0, 1.f / (zf - zn), 0,
+				0, 0, zn / (zn - zf), 1.f);
+		}
+
+		inline void Matrix4x4::BuildXForm(Fbox &B)
+		{
+			const Fmatrix bbox = *this;
+			B.xform(bbox);
+		}
+
+		inline void Matrix4x4::BuildCamDir(const Fvector &vFrom, const Fvector &vView, const Fvector &vWorldUp)
+		{
+			// Get the dot product, and calculate the projection of the z basis
+			// vector3 onto the up vector3. The projection is the y basis vector3.
+			float fDotProduct = vWorldUp.dotproduct(vView);
+
+			Fvector vUp;
+			vUp.mul(vView, -fDotProduct).add(vWorldUp).normalize();
+
+			// The x basis vector3 is found simply with the cross product of the y
+			// and z basis vectors
+			Fvector vRight;
+			vRight.crossproduct(vUp, vView);
+
+			// Start building the Device.mView. The first three rows contains the basis
+			// vectors used to rotate the view to point at the lookat point
+			Matrix = DirectX::XMMATRIX(
+				vRight.x, vUp.x, vView.x, 0.0f,
+				vRight.y, vUp.y, vView.y, 0.0f,
+				vRight.z, vUp.z, vView.z, 0.0f,
+				-vFrom.dotproduct(vRight), -vFrom.dotproduct(vUp), -vFrom.dotproduct(vView), 1.f);
+		}
 		inline void Matrix4x4::InvertMatrixByMatrix(const DirectX::XMMATRIX &a)
 		{
 			// faster than self-invert
@@ -502,17 +527,17 @@ namespace XRay
 			Matrix.r[0].m128_f32[1] = -fDetInv * (a.r[0].m128_f32[1] * a.r[2].m128_f32[2] - a.r[0].m128_f32[2] * a.r[2].m128_f32[1]);
 			Matrix.r[0].m128_f32[2] = fDetInv * (a.r[0].m128_f32[1] * a.r[1].m128_f32[2] - a.r[0].m128_f32[2] * a.r[1].m128_f32[1]);
 			Matrix.r[0].m128_f32[3] = 0.0f;
-			
+
 			Matrix.r[1].m128_f32[0] = -fDetInv * (a.r[1].m128_f32[0] * a.r[2].m128_f32[2] - a.r[1].m128_f32[2] * a.r[2].m128_f32[0]);
 			Matrix.r[1].m128_f32[1] = fDetInv * (a.r[0].m128_f32[0] * a.r[2].m128_f32[2] - a.r[0].m128_f32[2] * a.r[2].m128_f32[0]);
 			Matrix.r[1].m128_f32[2] = -fDetInv * (a.r[0].m128_f32[0] * a.r[1].m128_f32[2] - a.r[0].m128_f32[2] * a.r[1].m128_f32[0]);
 			Matrix.r[1].m128_f32[3] = 0.0f;
-			
+
 			Matrix.r[2].m128_f32[0] = fDetInv * (a.r[1].m128_f32[0] * a.r[2].m128_f32[1] - a.r[1].m128_f32[1] * a.r[2].m128_f32[0]);
 			Matrix.r[2].m128_f32[1] = -fDetInv * (a.r[0].m128_f32[0] * a.r[2].m128_f32[1] - a.r[0].m128_f32[1] * a.r[2].m128_f32[0]);
 			Matrix.r[2].m128_f32[2] = fDetInv * (a.r[0].m128_f32[0] * a.r[1].m128_f32[1] - a.r[0].m128_f32[1] * a.r[1].m128_f32[0]);
 			Matrix.r[2].m128_f32[3] = 0.0f;
-			
+
 			Matrix.r[3].m128_f32[0] = -(a.r[3].m128_f32[0] * Matrix.r[0].m128_f32[0] + a.r[3].m128_f32[1] * Matrix.r[1].m128_f32[0] + a.r[3].m128_f32[2] * Matrix.r[2].m128_f32[0]);
 			Matrix.r[3].m128_f32[1] = -(a.r[3].m128_f32[0] * Matrix.r[0].m128_f32[1] + a.r[3].m128_f32[1] * Matrix.r[1].m128_f32[1] + a.r[3].m128_f32[2] * Matrix.r[2].m128_f32[1]);
 			Matrix.r[3].m128_f32[2] = -(a.r[3].m128_f32[0] * Matrix.r[0].m128_f32[2] + a.r[3].m128_f32[1] * Matrix.r[1].m128_f32[2] + a.r[3].m128_f32[2] * Matrix.r[2].m128_f32[2]);
@@ -529,7 +554,7 @@ namespace XRay
 			w[3] = 1;
 		}
 
-		inline	void Matrix4x4::SetHPB(float h, float p, float b)
+		inline void Matrix4x4::SetHPB(float h, float p, float b)
 		{
 			float _ch, _cp, _cb, _sh, _sp, _sb, _cc, _cs, _sc, _ss;
 
@@ -543,12 +568,7 @@ namespace XRay
 			z = { -_cp * _sh, _sp, _cp*_ch,  0 };
 			w = { 0, 0, 0, 1 };
 		}
-		inline void TransformByMatrix(const Matrix4x4& m,Fvector &v)
-		{
-			Fvector res;
-			TransformVectorsByMatrix(m, res, v);
-			v.set(res);
-		}
+
 	}
 };
 

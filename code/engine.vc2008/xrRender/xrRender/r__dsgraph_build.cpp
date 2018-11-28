@@ -412,7 +412,7 @@ void CRender::add_leafs_Dynamic	(dxRender_Visual *pVisual)
 			if (pV->m_lod)				
 			{
 				Fvector Tpos;	float		D;
-				XRay::Math::TransformTiny(*val_pTransform, Tpos, pV->vis.sphere.P);
+				(*val_pTransform).TransformTiny(Tpos, pV->vis.sphere.P);
 				float		ssa		=	CalcSSA	(D,Tpos,pV->vis.sphere.R/2.f);	// assume dynamics never consume full sphere
 				if (ssa<r_ssaLOD_A)	_use_lod	= TRUE;
 			}
@@ -438,7 +438,7 @@ void CRender::add_leafs_Dynamic	(dxRender_Visual *pVisual)
 			// General type of visual
 			// Calculate distance to it's center
 			Fvector							Tpos;
-			XRay::Math::TransformTiny(*val_pTransform, Tpos, pVisual->vis.sphere.P);
+			(*val_pTransform).TransformTiny( Tpos, pVisual->vis.sphere.P);
 			r_dsgraph_insert_dynamic		(pVisual,Tpos);
 		}
 		return;
@@ -545,7 +545,7 @@ BOOL CRender::add_Dynamic(dxRender_Visual *pVisual, u32 planes)
 	Fvector		Tpos;	// transformed position
 	EFC_Visible	VIS;
 
-	XRay::Math::TransformTiny(*val_pTransform, Tpos, pVisual->vis.sphere.P);
+	(*val_pTransform).TransformTiny( Tpos, pVisual->vis.sphere.P);
 	VIS = View->testSphere			(Tpos, pVisual->vis.sphere.R,planes);
 	if (fcvNone==VIS) return FALSE	;
 
@@ -597,7 +597,7 @@ BOOL CRender::add_Dynamic(dxRender_Visual *pVisual, u32 planes)
 			if (pV->m_lod)				
 			{
 				Fvector							Tpos;	float		D;
-				XRay::Math::TransformTiny(*val_pTransform, Tpos, pV->vis.sphere.P);
+				(*val_pTransform).TransformTiny( Tpos, pV->vis.sphere.P);
 				float		ssa		=	CalcSSA	(D,Tpos,pV->vis.sphere.R/2.f);	// assume dynamics never consume full sphere
 				if (ssa<r_ssaLOD_A)	_use_lod	= TRUE		;
 			}

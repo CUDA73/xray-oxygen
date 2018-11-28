@@ -58,7 +58,7 @@ public:
 	virtual void	Clear() = 0;
 	virtual void	End() = 0;
 	virtual void	ClearTarget() = 0;
-	virtual void	SetCacheXform(const Fmatrix &mView, const Fmatrix &mProject) = 0;
+	virtual void	SetCacheXform(const Matrix4x4 &mView, const Matrix4x4 &mProject) = 0;
 	virtual void	OnAssetsChanged() = 0;
 	virtual void	ResizeWindowProc(WORD h, WORD w) = 0;
 };
