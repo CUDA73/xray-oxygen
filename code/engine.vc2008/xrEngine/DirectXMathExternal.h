@@ -72,6 +72,11 @@ namespace XRay
 					Vect = VectObj;
 				}
 
+				void operator=(const Fvector &VectObj)
+				{
+					Vect = { VectObj.x, VectObj.y, VectObj.z, Vect.m128_f32[3] };
+				}
+
 				inline operator Fvector()
 				{
 					return Fvector().set(Vect.m128_f32[0], Vect.m128_f32[1], Vect.m128_f32[2]);
@@ -172,6 +177,43 @@ namespace XRay
 			inline void Inverse(DirectX::XMVECTOR* pDeterminant, const DirectX::XMMATRIX& refMatrix)
 			{
 				Matrix = DirectX::XMMatrixInverse(pDeterminant, refMatrix);
+			}
+
+			inline void Transform(Fvector &dest, const Fvector &v) const noexcept
+			{
+				XRay::Math::TransformVectorsByMatrix(Matrix, dest, v);
+			}
+
+			inline void Transform(Fvector &dest) const noexcept
+			{
+				XRay::Math::TransformByMatrix(Matrix, dest);
+			}
+
+			inline void TransformTiny(Fvector &dest, const Fvector &v) const noexcept
+			{
+				XRay::Math::TransformTiny(Matrix, dest, v);
+			}
+
+			inline void TransformTiny(Fvector &dest) const
+			{
+				XRay::Math::TransformTiny(Matrix, dest);
+			}
+
+			inline void TranslateOver(const Fvector &v)
+			{
+				w = { v.x, v.y, v.z, w[3] };
+			}
+
+			inline void mk_xform(const _quaternion<float> &Q, const Fvector &V)
+			{
+				float xx = Q.x*Q.x; float yy = Q.y*Q.y; float zz = Q.z*Q.z;
+				float xy = Q.x*Q.y; float xz = Q.x*Q.z; float yz = Q.y*Q.z;
+				float wx = Q.w*Q.x; float wy = Q.w*Q.y; float wz = Q.w*Q.z;
+
+				x[0] = 1 - 2 * (yy + zz);	x[1] = 2 * (xy - wz);		x[2] = 2 * (xz + wy);		x[3] = 0;
+				y[0] = 2 * (xy + wz);		y[1] = 1 - 2 * (xx + zz);	y[2] = 2 * (yz - wx);		y[3] = 0;
+				z[0] = 2 * (xz - wy);		z[1] = 2 * (yz + wx);		z[2] = 1 - 2 * (xx + yy);	z[3] = 0;
+				w[0] = V.x;					w[1] = V.y;					w[2] = V.z;					w[3] = 1;
 			}
 
 		public:
