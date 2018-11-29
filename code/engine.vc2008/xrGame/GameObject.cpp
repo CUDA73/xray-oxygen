@@ -211,7 +211,7 @@ BOOL CGameObject::net_Spawn(CSE_Abstract* pSEAbstract)
 	setID(pSEAbstract->ID);
 
 	// XForm
-	XFORM().setXYZ(pSEAbstract->o_Angle);
+	XFORM().SetHPB(pSEAbstract->o_Angle.y, pSEAbstract->o_Angle.x, pSEAbstract->o_Angle.z);
 	Position().set(pSEAbstract->o_Position);
 
 	VERIFY(_valid(renderable.xform));
@@ -841,36 +841,36 @@ void CGameObject::destroy_anim_mov_ctrl	()
 	xr_delete			( m_anim_mov_ctrl );
 }
 
-IC	bool similar						(const Fmatrix &_0, const Fmatrix &_1, const float &epsilon = EPS)
+IC	bool similar (const Matrix4x4 &_0, const Matrix4x4 &_1, const float &epsilon = EPS)
 {
-	if (!_0.i.similar(_1.i,epsilon))
-		return						(false);
+	if (!_0.x.similar(_1.x,epsilon))
+		return (false);
 
-	if (!_0.j.similar(_1.j,epsilon))
-		return						(false);
+	if (!_0.y.similar(_1.y,epsilon))
+		return (false);
 
-	if (!_0.k.similar(_1.k,epsilon))
-		return						(false);
+	if (!_0.z.similar(_1.z,epsilon))
+		return (false);
 
-	if (!_0.c.similar(_1.c,epsilon))
-		return						(false);
+	if (!_0.w.similar(_1.w,epsilon))
+		return (false);
 
 	// note: we do not compare projection here
-	return							(true);
+	return (true);
 }
 
-void CGameObject::UpdateCL			()
+void CGameObject::UpdateCL()
 {
-	inherited::UpdateCL				();
+	inherited::UpdateCL();
 	
 	if (H_Parent())
 		return;
 
-	if (similar(XFORM(),m_previous_matrix,EPS))
-		return;
-
-	on_matrix_change				(m_previous_matrix);
-	m_previous_matrix				= XFORM();
+	if (!similar(XFORM(), m_previous_matrix, EPS))
+	{
+		obstacle().on_move();
+		m_previous_matrix = XFORM();
+	}
 }
 
 void CGameObject::on_matrix_change	(const Fmatrix &previous)

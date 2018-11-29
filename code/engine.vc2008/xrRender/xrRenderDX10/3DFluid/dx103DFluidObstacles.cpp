@@ -78,25 +78,25 @@ void dx103DFluidObstacles::ProcessObstacles( const dx103DFluidData &FluidData, f
 	PIX_EVENT(ProcessObstacles);
 
 	//	Prepare world-space to grid transform
-	Fmatrix WorldToFluid;
+	Matrix4x4 WorldToFluid;
 	{
-		Fmatrix InvFluidTranform;
-		Fmatrix Scale;
-		Fmatrix Translate;
-		Fmatrix TranslateScale;
+		Matrix4x4 InvFluidTranform;
+		Matrix4x4 Scale;
+		Matrix4x4 Translate;
+		Matrix4x4 TranslateScale;
 
 		//	Convert to 0..intDim space since it is used by simulation
 		//Scale.scale((float)m_iTextureWidth-1, (float)m_iTextureHeight-1, (float)m_iTextureDepth-1);
 		//Translate.translate(0.5, 0.5, 0.5);
 		//It seems that y axis is inverted in fluid simulation, so shange maths a bit
-		Scale.scale(m_vGridDim.x, -(m_vGridDim.y), m_vGridDim.z );
-		Translate.translate(0.5, -0.5, 0.5);
+		Scale = DirectX::XMMatrixScaling(m_vGridDim.x, -(m_vGridDim.y), m_vGridDim.z );
+		Translate.Translate({ 0.5, -0.5, 0.5 });
 
 		//	Actually it is mul(Translate, Scale).
 		//	Our matrix multiplication is not correct.
-		TranslateScale.mul(Scale, Translate);
-		InvFluidTranform.invert(FluidData.GetTransform());
-		WorldToFluid.mul(TranslateScale,InvFluidTranform);
+		TranslateScale.Multiply(Translate, Scale);
+		InvFluidTranform.InvertMatrixByMatrix(FluidData.GetTransform());
+		WorldToFluid.Multiply(InvFluidTranform, TranslateScale);
 	}
 
 	ProcessDynamicObstacles( FluidData, WorldToFluid, timestep );
@@ -107,20 +107,20 @@ void dx103DFluidObstacles::ProcessObstacles( const dx103DFluidData &FluidData, f
 	ProcessStaticObstacles( FluidData, WorldToFluid );
 }
 
-void dx103DFluidObstacles::RenderStaticOOBB( const Fmatrix &Transform)
+void dx103DFluidObstacles::RenderStaticOOBB( const Matrix4x4 &Transform)
 {
 	PIX_EVENT(RenderObstacle);
 
 	//	Shader must be already set up!
-	Fmatrix	InvTransform;
-	Fmatrix ClipTransform;
-	InvTransform.invert(Transform);
-	ClipTransform.transpose(InvTransform);
+	Matrix4x4	InvTransform;
+	Matrix4x4 ClipTransform;
+	InvTransform.InvertMatrixByMatrix(Transform);
+	ClipTransform = DirectX::XMMatrixTranspose(InvTransform);
 
 	for ( int i=0; i<6; ++i)
 	{
 		Fvector4	TransformedPlane;
-		ClipTransform.transform(TransformedPlane, UnitClipPlanes[i]);
+		ClipTransform.Transform(TransformedPlane, UnitClipPlanes[i]);
 		TransformedPlane.normalize_as_plane();
 		RCache.set_ca(strOOBBClipPlane, i, TransformedPlane);
 	}
@@ -128,22 +128,22 @@ void dx103DFluidObstacles::RenderStaticOOBB( const Fmatrix &Transform)
 	m_pGrid->DrawSlices();
 }
 
-void dx103DFluidObstacles::ProcessStaticObstacles( const dx103DFluidData &FluidData, const Fmatrix &WorldToFluid )
+void dx103DFluidObstacles::ProcessStaticObstacles( const dx103DFluidData &FluidData, const Matrix4x4 &WorldToFluid )
 {
 	RCache.set_Element(m_ObstacleTechnique[OS_OOBB]);
 
-	const xr_vector<Fmatrix> &Obstacles = FluidData.GetObstaclesList();
+	const xr_vector<Matrix4x4> &Obstacles = FluidData.GetObstaclesList();
 	int iObstNum = Obstacles.size();
 	for (int i=0; i<iObstNum; ++i)
 	{
-		Fmatrix Transform;
-		Transform.mul(WorldToFluid, Obstacles[i]);
+		Matrix4x4 Transform;
+		Transform.Multiply(Obstacles[i], WorldToFluid);
 
 		RenderStaticOOBB(Transform);
 	}
 }
 
-void dx103DFluidObstacles::ProcessDynamicObstacles( const dx103DFluidData &FluidData, const Fmatrix &WorldToFluid, float timestep )
+void dx103DFluidObstacles::ProcessDynamicObstacles( const dx103DFluidData &FluidData, const Matrix4x4 &WorldToFluid, float timestep )
 {
 	m_lstRenderables.clear();
 	m_lstShells.clear();
@@ -197,8 +197,8 @@ void dx103DFluidObstacles::ProcessDynamicObstacles( const dx103DFluidData &Fluid
 
 	RCache.set_Element(m_ObstacleTechnique[OS_DynamicOOBB]);
 
-	Fmatrix	FluidToWorld;
-	FluidToWorld.invert(WorldToFluid);
+	Matrix4x4	FluidToWorld;
+	FluidToWorld.InvertMatrixByMatrix(WorldToFluid);
 
 	RCache.set_c(strWorldToLocal, WorldToFluid);	
 	RCache.set_c(strLocalToWorld, FluidToWorld);
@@ -218,7 +218,7 @@ void dx103DFluidObstacles::ProcessDynamicObstacles( const dx103DFluidData &Fluid
 }
 
 //	TODO: DX10: Do it using instancing.
-void dx103DFluidObstacles::RenderPhysicsShell( const IPhysicsShell *pShell, const Fmatrix &WorldToFluid, float timestep )
+void dx103DFluidObstacles::RenderPhysicsShell( const IPhysicsShell *pShell, const Matrix4x4 &WorldToFluid, float timestep )
 {
 	u16 iObstNum = pShell->get_ElementsNumber();
 	for (u16 i=0; i<iObstNum; ++i)
@@ -229,7 +229,7 @@ void dx103DFluidObstacles::RenderPhysicsShell( const IPhysicsShell *pShell, cons
 	}
 }
 
-void dx103DFluidObstacles::RenderPhysicsElement( const IPhysicsElement &Element, const Fmatrix &WorldToFluid, float timestep)
+void dx103DFluidObstacles::RenderPhysicsElement( const IPhysicsElement &Element, const Matrix4x4 &WorldToFluid, float timestep)
 {
 	//	Shader must be already set up!
 	const Fvector3	&MassCenter3 = Element.mass_Center();
@@ -273,31 +273,31 @@ void dx103DFluidObstacles::RenderPhysicsElement( const IPhysicsElement &Element,
 	}
 }
 
-void dx103DFluidObstacles::RenderDynamicOOBB( const IPhysicsGeometry &Geometry, const Fmatrix &WorldToFluid, float timestep)
+void dx103DFluidObstacles::RenderDynamicOOBB( const IPhysicsGeometry &Geometry, const Matrix4x4 &WorldToFluid, float timestep)
 {
 	PIX_EVENT(RenderDynamicObstacle);
 
-	Fmatrix Transform;
+	Matrix4x4 Transform;
 
 	Fvector3 BoxSize;
-	Fmatrix OOBBTransform;
+	Matrix4x4 OOBBTransform;
 	Geometry.get_Box( OOBBTransform, BoxSize );
 
-	Transform.mul(WorldToFluid, OOBBTransform);
+	Transform.Multiply(OOBBTransform, WorldToFluid);
 
 	//	Shader must be already set up!
 	//	DynOOBBData must be already set up!
-	Fmatrix	InvTransform;
-	Fmatrix ClipTransform;
-	InvTransform.invert(Transform);
-	ClipTransform.transpose(InvTransform);
+	Matrix4x4	InvTransform;
+	Matrix4x4 ClipTransform;
+	InvTransform.InvertMatrixByMatrix(Transform);
+	ClipTransform = DirectX::XMMatrixTranspose(InvTransform);
 
 	for ( int i=0; i<6; ++i)
 	{
 		Fvector4	UpdatedPlane = UnitClipPlanes[i];
 		UpdatedPlane.w *= BoxSize[i/2];
 		Fvector4	TransformedPlane;
-		ClipTransform.transform(TransformedPlane, UpdatedPlane);
+		ClipTransform.Transform(TransformedPlane, UpdatedPlane);
 		TransformedPlane.normalize_as_plane();
 		RCache.set_ca(strOOBBClipPlane, i, TransformedPlane);
 	}

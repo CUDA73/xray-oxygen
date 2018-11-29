@@ -122,9 +122,9 @@ void	CRenderTarget::u_setrt(u32 W, u32 H, ID3DRenderTargetView* _1, ID3DRenderTa
 }
 
 // 2D texgen (texture adjustment matrix)
-void	CRenderTarget::u_compute_texgen_screen(Fmatrix& m_Texgen)
+void CRenderTarget::u_compute_texgen_screen(Matrix4x4& m_Texgen)
 {
-	Fmatrix			m_TexelAdjust =
+	Matrix4x4			m_TexelAdjust =
 	{
 		0.5f,				0.0f,				0.0f,			0.0f,
 		0.0f,				-0.5f,				0.0f,			0.0f,
@@ -132,29 +132,29 @@ void	CRenderTarget::u_compute_texgen_screen(Fmatrix& m_Texgen)
 		//	Removing half pixel offset
 		0.5f,				0.5f ,				0.0f,			1.0f
 	};
-	m_Texgen.mul(m_TexelAdjust, RCache.xforms.m_wvp);
+	m_Texgen.Multiply(RCache.xforms.m_wvp, m_TexelAdjust);
 }
 
 // 2D texgen for jitter (texture adjustment matrix)
-void	CRenderTarget::u_compute_texgen_jitter(Fmatrix&		m_Texgen_J)
+void CRenderTarget::u_compute_texgen_jitter(Matrix4x4&		m_Texgen_J)
 {
 	// place into	0..1 space
-	Fmatrix			m_TexelAdjust =
+	Matrix4x4			m_TexelAdjust =
 	{
 		0.5f,				0.0f,				0.0f,			0.0f,
 		0.0f,				-0.5f,				0.0f,			0.0f,
 		0.0f,				0.0f,				1.0f,			0.0f,
 		0.5f,				0.5f,				0.0f,			1.0f
 	};
-	m_Texgen_J.mul(m_TexelAdjust, RCache.xforms.m_wvp);
+	m_Texgen_J.Multiply(RCache.xforms.m_wvp, m_TexelAdjust);
 
 	// rescale - tile it
 	///////////////////////////////////////////
 	float scale_X = float(Device.dwWidth) / float(TEX_jitter);
 	float scale_Y = float(Device.dwHeight) / float(TEX_jitter);
 	///////////////////////////////////////////
-	m_TexelAdjust.scale(scale_X, scale_Y, 1.f);
-	m_Texgen_J.mulA_44(m_TexelAdjust);
+	m_TexelAdjust = DirectX::XMMatrixScaling(scale_X, scale_Y, 1.f);
+	m_Texgen_J.Multiply(m_Texgen_J, m_TexelAdjust);
 }
 
 u8 fpack(float v) 

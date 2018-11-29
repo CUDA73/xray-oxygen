@@ -223,7 +223,8 @@ void CRender::render_rain()
 	}
 
 	// Fill the database
-	r_dsgraph_render_subspace(cull_sector, &cull_frustum, XRay::Math::CastToGSCMatrix(cull_xform), cull_COP, FALSE);
+	Matrix4x4 F4identity = DirectX::XMMatrixIdentity();
+	r_dsgraph_render_subspace(cull_sector, &cull_frustum, (cull_xform), cull_COP, FALSE);
 
 	// Finalize & Cleanup
 	RainLight.X.D.combine = cull_xform;
@@ -235,8 +236,8 @@ void CRender::render_rain()
 		bool bSpecial = mapNormalPasses[1][0].size() || mapMatrixPasses[1][0].size() || mapSorted.size();
 		if (bNormal || bSpecial) {
 			Target->phase_smap_direct(&RainLight, SE_SUN_RAIN_SMAP);
-			RCache.set_xform_world(Fidentity);
-			RCache.set_xform_view(Fidentity);
+			RCache.set_xform_world(F4identity);
+			RCache.set_xform_view(F4identity);
 			RCache.set_xform_project(RainLight.X.D.combine);
 			r_dsgraph_render_graph(0);
 		}
@@ -246,7 +247,7 @@ void CRender::render_rain()
 	r_pmask(true, false);
 
 	// Restore XForms
-	RCache.set_xform_world(Fidentity);
+	RCache.set_xform_world(F4identity);
 	RCache.set_xform_view(Device.mView);
 	RCache.set_xform_project(Device.mProject);
 

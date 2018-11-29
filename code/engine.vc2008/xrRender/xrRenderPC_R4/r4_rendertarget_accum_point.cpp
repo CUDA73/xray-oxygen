@@ -25,8 +25,8 @@ void CRenderTarget::accum_point		(light* L)
 	// Xforms
 	L->xform_calc					();
 	RCache.set_xform_world			(L->m_xform);
-	RCache.set_xform_view			(CastToGSCMatrix(Device.mView));
-	RCache.set_xform_project		(CastToGSCMatrix(Device.mProject));
+	RCache.set_xform_view			((Device.mView));
+	RCache.set_xform_project		((Device.mProject));
 	enable_scissor					(L);
 
 	// *****************************	Mask by stencil		*************************************
@@ -57,8 +57,8 @@ void CRenderTarget::accum_point		(light* L)
 	RCache.set_CullMode						(CULL_CW);		// back
 
 	// 2D texgens 
-	Fmatrix			m_Texgen;			u_compute_texgen_screen	(m_Texgen	);
-	Fmatrix			m_Texgen_J;			u_compute_texgen_jitter	(m_Texgen_J	);
+	Matrix4x4			m_Texgen;			u_compute_texgen_screen	(m_Texgen	);
+	Matrix4x4			m_Texgen_J;			u_compute_texgen_jitter	(m_Texgen_J	);
 
 	// Draw volume with projective texgen
 	{

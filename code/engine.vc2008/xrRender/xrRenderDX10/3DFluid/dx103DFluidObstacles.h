@@ -26,15 +26,15 @@ private:
 	void	InitShaders();
 	void	DestroyShaders();
 
-	void	ProcessStaticObstacles( const dx103DFluidData &FluidData, const Fmatrix &WorldToFluid );
-	void	ProcessDynamicObstacles( const dx103DFluidData &FluidData, const Fmatrix &WorldToFluid, float timestep );
+	void	ProcessStaticObstacles( const dx103DFluidData &FluidData, const Matrix4x4 &WorldToFluid );
+	void	ProcessDynamicObstacles( const dx103DFluidData &FluidData, const Matrix4x4 &WorldToFluid, float timestep );
 
 	//	This technique renders several objects.
-	void	RenderPhysicsShell( const IPhysicsShell *pShell, const Fmatrix &WorldToFluid, float timestep );
-	void	RenderPhysicsElement( const IPhysicsElement &Element, const Fmatrix &WorldToFluid, float timestep);
+	void	RenderPhysicsShell( const IPhysicsShell *pShell, const Matrix4x4 &WorldToFluid, float timestep );
+	void	RenderPhysicsElement( const IPhysicsElement &Element, const Matrix4x4 &WorldToFluid, float timestep);
 
-	void	RenderStaticOOBB( const Fmatrix &Transform);
-	void	RenderDynamicOOBB( const IPhysicsGeometry &Geometry, const Fmatrix &WorldToFluid, float timestep);
+	void	RenderStaticOOBB( const Matrix4x4 &Transform);
+	void	RenderDynamicOOBB( const IPhysicsGeometry &Geometry, const Matrix4x4 &WorldToFluid, float timestep);
 	
 private:
 	Fvector3	m_vGridDim;

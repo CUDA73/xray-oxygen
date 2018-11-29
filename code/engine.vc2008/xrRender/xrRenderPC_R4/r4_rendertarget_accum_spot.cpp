@@ -38,8 +38,8 @@ void CRenderTarget::accum_spot(light* L)
 		// setup xform
 		L->xform_calc();
 		RCache.set_xform_world(L->m_xform);
-		RCache.set_xform_view(CastToGSCMatrix(Device.mView));
-		RCache.set_xform_project(CastToGSCMatrix(Device.mProject));
+		RCache.set_xform_view(Device.mView);
+		RCache.set_xform_project(Device.mProject);
 		bIntersect = enable_scissor(L);
 
 		// *** similar to "Carmack's reverse", but assumes convex, non intersecting objects,
@@ -70,8 +70,8 @@ void CRenderTarget::accum_spot(light* L)
 	RCache.set_CullMode(CULL_CW);		// back
 
 	// 2D texgens 
-	Fmatrix	m_Texgen;			u_compute_texgen_screen(m_Texgen);
-	Fmatrix	m_Texgen_J;			u_compute_texgen_jitter(m_Texgen_J);
+	Matrix4x4	m_Texgen;			u_compute_texgen_screen(m_Texgen);
+	Matrix4x4	m_Texgen_J;			u_compute_texgen_jitter(m_Texgen_J);
 
 	// Shadow xform (+texture adjustment matrix)
 	Matrix4x4	m_Shadow, m_Lmap;
@@ -272,8 +272,8 @@ void CRenderTarget::accum_volumetric(light* L)
 		// setup xform
 		L->xform_calc();
 		RCache.set_xform_world(L->m_xform);
-		RCache.set_xform_view(CastToGSCMatrix(Device.mView));
-		RCache.set_xform_project(CastToGSCMatrix(Device.mProject));
+		RCache.set_xform_view(Device.mView);
+		RCache.set_xform_project(Device.mProject);
 		bIntersect = enable_scissor(L);
 	}
 
@@ -281,12 +281,12 @@ void CRenderTarget::accum_volumetric(light* L)
 	RCache.set_CullMode(CULL_NONE);		// back
 
 	// 2D texgens 
-	Fmatrix			m_Texgen;			u_compute_texgen_screen(m_Texgen);
-	Fmatrix			m_Texgen_J;			u_compute_texgen_jitter(m_Texgen_J);
+	Matrix4x4			m_Texgen;			u_compute_texgen_screen(m_Texgen);
+	Matrix4x4			m_Texgen_J;			u_compute_texgen_jitter(m_Texgen_J);
 
 	// Shadow xform (+texture adjustment matrix)
-	Fmatrix			m_Shadow, m_Lmap;
-	Fmatrix			mFrustumSrc;
+	Matrix4x4			m_Shadow, m_Lmap;
+	Matrix4x4			mFrustumSrc;
 	CFrustum		ClipFrustum;
 	{
 		float			smapsize = float(RImplementation.o.smapsize);
@@ -296,7 +296,7 @@ void CRenderTarget::accum_volumetric(light* L)
 		float			view_sy = float(L->X.S.posY + 1) / smapsize;
 		float			fRange = float(1.f)*ps_r_ls_depth_scale;
 		float			fBias = ps_r_ls_depth_bias;
-		Fmatrix			m_TexelAdjust = {
+		Matrix4x4			m_TexelAdjust = {
 			view_dim / 2.f,							0.0f,									0.0f,		0.0f,
 			0.0f,									-view_dim / 2.f,							0.0f,		0.0f,
 			0.0f,									0.0f,									fRange,		0.0f,
@@ -304,21 +304,21 @@ void CRenderTarget::accum_volumetric(light* L)
 		};
 
 		// compute xforms
-		Fmatrix xf_world;		
-		xf_world.invert(CastToGSCMatrix(Device.mView));
+		Matrix4x4 xf_world;		
+		xf_world.InvertMatrixByMatrix(Device.mView);
 
-		Fmatrix xf_view = CastToGSCMatrix(L->X.S.view);
-		Fmatrix xf_project;		
-		xf_project.mul(m_TexelAdjust, CastToGSCMatrix(L->X.S.project));
+		Matrix4x4 xf_view = (L->X.S.view);
+		Matrix4x4 xf_project;		
+		xf_project.Multiply((L->X.S.project), m_TexelAdjust);
 
-		m_Shadow.mul(xf_view, xf_world);
-		m_Shadow.mulA_44(xf_project);
+		m_Shadow.Multiply(xf_world, xf_view);
+		m_Shadow.Multiply(m_Shadow, xf_project);
 
 		// lmap
 		view_dim = 1.f;
 		view_sx = 0.f;
 		view_sy = 0.f;
-		Fmatrix			m_TexelAdjust2 = {
+		Matrix4x4			m_TexelAdjust2 = {
 			view_dim / 2.f,							0.0f,									0.0f,		0.0f,
 			0.0f,									-view_dim / 2.f,							0.0f,		0.0f,
 			0.0f,									0.0f,									fRange,		0.0f,
@@ -326,12 +326,12 @@ void CRenderTarget::accum_volumetric(light* L)
 		};
 
 		// compute xforms
-		xf_project.mul(m_TexelAdjust2, CastToGSCMatrix(L->X.S.project));
-		m_Lmap.mul(xf_view, xf_world);
-		m_Lmap.mulA_44(xf_project);
+		xf_project.Multiply((L->X.S.project), m_TexelAdjust2);
+		m_Lmap.Multiply(xf_world, xf_view);
+		m_Lmap.Multiply(m_Lmap, xf_project);
 
 		// Compute light frustum in world space
-		mFrustumSrc.mul(CastToGSCMatrix(L->X.S.project), xf_view);
+		mFrustumSrc.Multiply(xf_view, L->X.S.project);
 		ClipFrustum.CreateFromMatrix(mFrustumSrc, FRUSTUM_P_ALL);
 		//	Adjust frustum far plane
 		//	4 - far, 5 - near
@@ -409,8 +409,8 @@ void CRenderTarget::accum_volumetric(light* L)
 		RCache.set_c("m_texgen", m_Texgen);
 		RCache.set_c("m_texgen_J", m_Texgen_J);
 		RCache.set_c("m_shadow", m_Shadow);
-		RCache.set_ca("m_lmap", 0, m_Lmap._11, m_Lmap._21, m_Lmap._31, m_Lmap._41);
-		RCache.set_ca("m_lmap", 1, m_Lmap._12, m_Lmap._22, m_Lmap._32, m_Lmap._42);
+		RCache.set_ca("m_lmap", 0, m_Lmap.x[0], m_Lmap.y[0], m_Lmap.z[0], m_Lmap.w[0]);
+		RCache.set_ca("m_lmap", 1, m_Lmap.x[1], m_Lmap.y[1], m_Lmap.z[1], m_Lmap.w[1]);
 		RCache.set_c("vMinBounds", aabb.x1, aabb.y1, aabb.z1, 0);
 		//	Increase camera-space aabb z size to compensate decrease of slices number
 		RCache.set_c("vMaxBounds", aabb.x2, aabb.y2, aabb.z1 + (aabb.z2 - aabb.z1) / fQuality, 0);
@@ -420,14 +420,15 @@ void CRenderTarget::accum_volumetric(light* L)
 			static shared_str	strFrustumClipPlane("FrustumClipPlane");
 
 			//	Transform frustum to clip space
-			Fmatrix PlaneTransform;
-			PlaneTransform.transpose(Device.mInvFullTransform);
+			Matrix4x4 PlaneTransform;
+			Matrix4x4 InvFullTransform; InvFullTransform = Device.mInvFullTransform;
+			PlaneTransform = DirectX::XMMatrixTranspose(InvFullTransform);
 
 			for (int i = 0; i < 6; ++i)
 			{
 				Fvector4	&ClipPlane = *(Fvector4*)&ClipFrustum.planes[i].n.x;
 				Fvector4	TransformedPlane;
-				PlaneTransform.transform(TransformedPlane, ClipPlane);
+				PlaneTransform.Transform(TransformedPlane, ClipPlane);
 				TransformedPlane.mul(-1.0f);
 				RCache.set_ca(strFrustumClipPlane, i, TransformedPlane);
 			}
@@ -441,7 +442,7 @@ void CRenderTarget::accum_volumetric(light* L)
 		RCache.set_ColorWriteEnable();
 
 		//	Restore clip planes
-		RCache.set_ClipPlanes(FALSE, (Fmatrix *)nullptr, 0);
+		RCache.set_ClipPlanes(FALSE, (Matrix4x4 *)nullptr, 0);
 	}
 	RCache.set_Scissor(nullptr);
 }

@@ -3,7 +3,7 @@
 #include "StateManager/dx10StateManager.h"
 #include "StateManager/dx10ShaderResourceStateCache.h"
 
-IC void CBackend::set_xform( u32 ID, const Fmatrix& Matrix )
+IC void CBackend::set_xform( u32 ID, const Matrix4x4& Matrix )
 {
 	stat.xforms			++;
 }

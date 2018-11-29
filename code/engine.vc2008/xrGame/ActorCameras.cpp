@@ -34,7 +34,7 @@ void CActor::cam_SetLadder()
 {
 	CCameraBase* C			= cameras[eacFirstEye];
 	g_LadderOrient			();
-	float yaw				= (-XFORM().k.getH());
+	float yaw				= (-XFORM().z.GetH());
 	float &cam_yaw			= C->yaw;
 	float delta_yaw			= angle_difference_signed(yaw,cam_yaw);
 
@@ -48,12 +48,13 @@ void CActor::cam_SetLadder()
 		C->bClampYaw		= true;
 	}
 }
+
 void CActor::camUpdateLadder(float dt)
 {
 	if(!character_physics_support()->movement()->ElevatorState())
 															return;
 	if(cameras[eacFirstEye]->bClampYaw) return;
-	float yaw				= (-XFORM().k.getH());
+	float yaw				= (-XFORM().z.GetH());
 
 	float & cam_yaw			= cameras[eacFirstEye]->yaw;
 	float delta				= angle_difference_signed(yaw,cam_yaw);
@@ -282,9 +283,9 @@ void CActor::cam_Update(float dt, float fFOV)
 
 	Fvector point = { 0, CurrentHeight + current_ik_cam_shift, 0 };
 	Fvector dangle = { 0,0,0 };
-	Fmatrix				xform;
-	xform.setXYZ(0, r_torso.yaw, 0);
-	xform.translate_over(XFORM().c);
+	Matrix4x4 xform;
+	xform.SetHPB( r_torso.yaw,0, 0);
+	xform.TranslateOver(XFORM().w);
 
 	// lookout
 	if (this == Level().CurrentControlEntity())
@@ -299,7 +300,7 @@ void CActor::cam_Update(float dt, float fFOV)
 		dangle.z = (PI_DIV_2 - ((PI + valid_angle) / 2));
 	}
 
-	float flCurrentPlayerY = xform.c.y;
+	float flCurrentPlayerY = xform.w[2];
 
 	// Smooth out stair step ups
 	if ((character_physics_support()->movement()->Environment() == CPHMovementControl::peOnGround) && (flCurrentPlayerY - fPrevCamPos > 0)) {
@@ -316,7 +317,7 @@ void CActor::cam_Update(float dt, float fFOV)
 
 	float _viewport_near = VIEWPORT_NEAR;
 	// calc point
-	xform.transform_tiny(point);
+	xform.TransformTiny(point);
 
 	CCameraBase* C = cam_Active();
 

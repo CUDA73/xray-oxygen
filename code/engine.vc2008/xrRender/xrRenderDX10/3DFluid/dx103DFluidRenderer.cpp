@@ -87,14 +87,13 @@ void dx103DFluidRenderer::Initialize(int gridWidth, int gridHeight, int gridDept
 	{
 		// Make a scale matrix to scale the unit-sided box to be unit-length on the 
 		//  side/s with maximum dimension 
-		D3DXMATRIX scaleM;
-		D3DXMatrixIdentity(&scaleM);
-		D3DXMatrixScaling(&scaleM, m_vGridDim[0] / m_fMaxDim, m_vGridDim[1] / m_fMaxDim, m_vGridDim[2] / m_fMaxDim);
+		Matrix4x4 scaleM;
+		scaleM.Identity();
+		scaleM.Scale(m_vGridDim[0] / m_fMaxDim, m_vGridDim[1] / m_fMaxDim, m_vGridDim[2] / m_fMaxDim);
 
 		// offset grid to be centered at origin
-		D3DXMATRIX translationM;
-		D3DXMatrixTranslation(&translationM, -0.5, -0.5, -0.5);
-
+		Matrix4x4 translationM;
+		translationM.Translate({ -0.5, -0.5, -0.5 });
 		m_gridMatrix = translationM * scaleM;
 	}
 
@@ -406,7 +405,7 @@ void dx103DFluidRenderer::Draw(const dx103DFluidData &FluidData)
 	CalculateLighting(FluidData, LightData);
 
 
-	const Fmatrix &transform = FluidData.GetTransform();
+	const Matrix4x4 &transform = FluidData.GetTransform();
 
 	RCache.set_xform_world( transform );
 
@@ -421,16 +420,16 @@ void dx103DFluidRenderer::Draw(const dx103DFluidData &FluidData)
 	RCache.set_c(strZNear, VIEWPORT_NEAR);
 	RCache.set_c(strZFar, Environment().CurrentEnv->far_plane);
 
-	D3DXMATRIX gridWorld;
-	gridWorld = *(D3DXMATRIX*)&transform;
-	D3DXMATRIX View;
-	View = *(D3DXMATRIX*)&RCache.xforms.m_v;
-	D3DXMATRIX WorldView = gridWorld * View;
+	Matrix4x4 gridWorld;
+	gridWorld = transform;
+	Matrix4x4 View;
+	View = RCache.xforms.m_v;
+	Matrix4x4 WorldView = gridWorld * View;
 
 	// The length of one of the axis of the worldView matrix is the length of longest side of the box
 	//  in view space. This is used to convert the length of a ray from view space to grid space.
-	D3DXVECTOR3 worldXaxis = D3DXVECTOR3(WorldView._11, WorldView._12, WorldView._13);
-	float worldScale = D3DXVec3Length(&worldXaxis);
+	const DirectX::XMFLOAT3 worldXaxis = DirectX::XMFLOAT3(WorldView.x[0], WorldView.x[1], WorldView.x[2]);
+	float worldScale = XRay::Math::XMFloat3Len(worldXaxis);
 	RCache.set_c(strGridScaleFactor, worldScale);
 
 	// We prepend the current world matrix with this other matrix which adds an offset (-0.5, -0.5, -0.5)
@@ -440,25 +439,25 @@ void dx103DFluidRenderer::Draw(const dx103DFluidData &FluidData)
 	WorldView = m_gridMatrix * WorldView;
 	
 	// worldViewProjection is used to transform the volume box to screen space
-	D3DXMATRIX WorldViewProjection;
-	D3DXMATRIX Projection;
-	Projection = *(D3DXMATRIX*)&RCache.xforms.m_p;
+	Matrix4x4 WorldViewProjection;
+	Matrix4x4 Projection;
+	Projection = RCache.xforms.m_p;
 	WorldViewProjection = WorldView * Projection;
-	RCache.set_c(strWorldViewProjection, *(Fmatrix*)&WorldViewProjection);
+	RCache.set_c(strWorldViewProjection, *(Matrix4x4*)&WorldViewProjection);
 
 	// invWorldViewProjection is used to transform positions in the "near" plane into grid space
-	D3DXMATRIX InvWorldViewProjection;
-	D3DXMatrixInverse((D3DXMATRIX*)&InvWorldViewProjection, NULL, (D3DXMATRIX*)&WorldViewProjection);
-	RCache.set_c(strInvWorldViewProjection, *(Fmatrix*)&InvWorldViewProjection);
+	Matrix4x4 InvWorldViewProjection;
+	InvWorldViewProjection.Inverse(nullptr, WorldViewProjection);
+	RCache.set_c(strInvWorldViewProjection, InvWorldViewProjection);
 
 	// Compute the inverse of the worldView matrix ;
-	D3DXMATRIX WorldViewInv;
-	D3DXMatrixInverse((D3DXMATRIX*)&WorldViewInv, NULL, (D3DXMATRIX*)&WorldView);
+	Matrix4x4 WorldViewInv;
+	WorldViewInv.Inverse(nullptr, WorldView);
 
 	// Compute the eye's position in "grid space" (the 0-1 texture coordinate cube)
-	D3DXVECTOR4 EyeInGridSpace;
-	D3DXVECTOR3 Origin(0,0,0);
-	D3DXVec3Transform((D3DXVECTOR4*)&EyeInGridSpace, (D3DXVECTOR3*)&Origin, (D3DXMATRIX*)&WorldViewInv);
+	DirectX::XMVECTOR  EyeInGridSpace;
+	DirectX::XMVECTOR Origin = { (0, 0, 0, 0) };
+	EyeInGridSpace = DirectX::XMVector3TransformCoord(Origin, WorldViewInv);
 	RCache.set_c(strEyeOnGrid, *(Fvector4*)&EyeInGridSpace);
 
 	float color[4] = {0, 0, 0, 0 };
@@ -627,7 +626,7 @@ void dx103DFluidRenderer::CalculateLighting(const dx103DFluidData &FluidData, Fo
 	LightData.m_vLightIntencity.set(hemi_color.x, hemi_color.y, hemi_color.z);
 	LightData.m_vLightIntencity.add(Environment().CurrentEnv->ambient);
 
-	const Fmatrix &Transform = FluidData.GetTransform();
+	const Matrix4x4 &Transform = FluidData.GetTransform();
 
 	Fbox	box;
 	box.min = Fvector3().set(-0.5f, -0.5f, -0.5f);
@@ -661,7 +660,7 @@ void dx103DFluidRenderer::CalculateLighting(const dx103DFluidData &FluidData, Fo
 
 		if (pLight->flags.bStatic) continue;
 
-		float	d	=	pLight->position.distance_to(Transform.c);
+		float	d	=	pLight->position.distance_to(Transform.w);
 
 		float	R				= pLight->range + std::max( size.x, std::max( size.y, size.z ) );
 		if ( d >= R )

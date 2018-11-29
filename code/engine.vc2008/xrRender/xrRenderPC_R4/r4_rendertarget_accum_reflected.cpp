@@ -14,8 +14,8 @@ void CRenderTarget::accum_reflected		(light* L)
 	BOOL	bIntersect			= FALSE; //enable_scissor(L);
 	L->xform_calc				();
 	RCache.set_xform_world		(L->m_xform			);
-	RCache.set_xform_view		(CastToGSCMatrix(Device.mView		));
-	RCache.set_xform_project	(CastToGSCMatrix(Device.mProject	));
+	RCache.set_xform_view		((Device.mView		));
+	RCache.set_xform_project	((Device.mProject	));
 	bIntersect					= enable_scissor	(L);
 
 	// *****************************	Minimize overdraw	*************************************
@@ -25,20 +25,20 @@ void CRenderTarget::accum_reflected		(light* L)
 	else			RCache.set_CullMode		(CULL_CCW);		// front
 
 	// 2D texgen (texture adjustment matrix)
-	Fmatrix			m_Texgen;
+	Matrix4x4			m_Texgen;
 	{
 		float	_w						= float(Device.dwWidth);
 		float	_h						= float(Device.dwHeight);
 		float	o_w						= (.5f / _w);
 		float	o_h						= (.5f / _h);
-		Fmatrix			m_TexelAdjust		= 
+		Matrix4x4			m_TexelAdjust		= 
 		{
 			0.5f,				0.0f,				0.0f,			0.0f,
 			0.0f,				-0.5f,				0.0f,			0.0f,
 			0.0f,				0.0f,				1.0f,			0.0f,
 			0.5f + o_w,			0.5f + o_h,			0.0f,			1.0f
 		};
-		m_Texgen.mul	(m_TexelAdjust,RCache.xforms.m_wvp);
+		m_Texgen.Multiply	(RCache.xforms.m_wvp, m_TexelAdjust);
 	}
 
 	// Common constants

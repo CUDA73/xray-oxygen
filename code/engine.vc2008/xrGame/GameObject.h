@@ -178,7 +178,7 @@ public:
 	{
 		SRotation			rotation;
 		float				h,p,b;
-		XFORM().getHPB		(h,p,b);
+		XFORM().GetHPB		(h,p,b);
 		rotation.yaw		= h;
 		rotation.pitch		= p;
 		return				(rotation);
@@ -281,17 +281,15 @@ private:
 
 private:
 	ai_obstacle				*m_ai_obstacle;
-	Fmatrix					m_previous_matrix;
+	Matrix4x4				m_previous_matrix;
 
 public:
 	virtual	bool			is_ai_obstacle		() const;
 
 public:
-	IC		ai_obstacle		&obstacle			() const
+	IC ai_obstacle			&obstacle			() const
 	{
 		VERIFY				(m_ai_obstacle);
 		return				(*m_ai_obstacle);
 	}
-
-	virtual void			on_matrix_change	(const Fmatrix &previous);
 };

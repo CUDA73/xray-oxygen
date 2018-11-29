@@ -107,7 +107,7 @@ void dx103DFluidData::Load(IReader *data)
 	m_Obstacles.reserve(uiObstCnt);
 	for(u32 i=0; i<uiObstCnt; ++i)
 	{
-		Fmatrix		ObstTransform;
+		Matrix4x4		ObstTransform;
 		data->r( &ObstTransform, sizeof(ObstTransform) );
 		m_Obstacles.push_back(ObstTransform);
 	}
@@ -130,12 +130,12 @@ void dx103DFluidData::ParseProfile(const xr_string &Profile)
 	m_Settings.m_fDecay = 0.994f;
 	m_Settings.m_fGravityBuoyancy = 0.0f;
 
-	Fmatrix WorldToFluid;
+	Matrix4x4 WorldToFluid;
 	{
-		Fmatrix InvFluidTranform;
-		Fmatrix Scale;
-		Fmatrix Translate;
-		Fmatrix TranslateScale;
+		Matrix4x4 InvFluidTranform;
+		Matrix4x4 Scale;
+		Matrix4x4 Translate;
+		Matrix4x4 TranslateScale;
 
 		//	Convert to 0..intDim space since it is used by simulation
 		//Scale.scale((float)m_iTextureWidth-1, (float)m_iTextureHeight-1, (float)m_iTextureDepth-1);
@@ -143,14 +143,14 @@ void dx103DFluidData::ParseProfile(const xr_string &Profile)
 		//It seems that y axis is inverted in fluid simulation, so shange maths a bit
 		Fvector	vGridDim;
 		vGridDim.set( (float)FluidManager.GetTextureWidth(), (float)FluidManager.GetTextureHeight(), (float)FluidManager.GetTextureDepth() );
-		Scale.scale(vGridDim.x-1, -(vGridDim.y-1), vGridDim.z-1 );
-		Translate.translate(0.5, -0.5, 0.5);
+		Scale.Scale(vGridDim.x-1, -(vGridDim.y-1), vGridDim.z-1 );
+		Translate.Translate({ 0.5, -0.5, 0.5 });
 
 		//	Actually it is mul(Translate, Scale).
 		//	Our matrix multiplication is not correct.
-		TranslateScale.mul(Scale, Translate);
-		InvFluidTranform.invert(m_Transform);
-		WorldToFluid.mul(TranslateScale,InvFluidTranform);
+		TranslateScale.Multiply(Translate, Scale);
+		InvFluidTranform.InvertMatrixByMatrix(m_Transform);
+		WorldToFluid.Multiply(InvFluidTranform, TranslateScale);
 	}
 
 	//	Read Volume data
@@ -188,7 +188,7 @@ void dx103DFluidData::ParseProfile(const xr_string &Profile)
 		else
 		{
 			Emitter.m_vPosition = ini.r_fvector3(EmitterSectionName, "WorldPosition");
-			WorldToFluid.transform(Emitter.m_vPosition);
+			WorldToFluid.Transform(Emitter.m_vPosition);
 		}
 
 		Emitter.m_fRadius = ini.r_float(EmitterSectionName, "Radius");

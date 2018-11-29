@@ -38,8 +38,8 @@ public:
 
 	ID3DTexture3D*			GetTexture(eVolumePrivateRT id) const { m_pRTTextures[id]->AddRef(); return m_pRTTextures[id];}
 	ID3DRenderTargetView*		GetView(eVolumePrivateRT id) const { m_pRenderTargetViews[id]->AddRef(); return m_pRenderTargetViews[id];}
-	const Fmatrix&				GetTransform() const { return m_Transform;}
-	const xr_vector<Fmatrix>&	GetObstaclesList() const { return m_Obstacles;}
+	const Matrix4x4&				GetTransform() const { return m_Transform;}
+	const xr_vector<Matrix4x4>&	GetObstaclesList() const { return m_Obstacles;}
 	const xr_vector<dx103DFluidEmitters::CEmitter>& GetEmittersList() const { return m_Emitters;}
 	const Settings&				GetSettings() const { return m_Settings;}
 
@@ -59,9 +59,9 @@ private:
 	void	ParseProfile(const xr_string &Profile);
 
 private:
-	Fmatrix					m_Transform;
+	Matrix4x4					m_Transform;
 
-	xr_vector<Fmatrix>		m_Obstacles;
+	xr_vector<Matrix4x4>		m_Obstacles;
 	xr_vector<CEmitter>		m_Emitters;
 
 	Settings				m_Settings;

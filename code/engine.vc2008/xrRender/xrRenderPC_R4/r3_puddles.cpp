@@ -9,8 +9,8 @@ void SPuddle::make_xform()
 {
 	Fvector scale = {0,0,0};
 	float scale_coeff = radius*0.02f;
-	xform.scale(scale_coeff, scale_coeff, scale_coeff);		// константа - обратный радиус модели (14:05:2014 радиус равен 50)
-	xform.translate_over(P);
+	xform.Scale(scale_coeff, scale_coeff, scale_coeff);		// константа - обратный радиус модели (14:05:2014 радиус равен 50)
+	xform.TranslateOver(P);
 }
 
 void CPuddles::Load()

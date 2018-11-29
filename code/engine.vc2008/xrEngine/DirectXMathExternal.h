@@ -213,10 +213,15 @@ namespace XRay
 		{
 			return (::_sqrt(XMV_square_magnitude(v)));
 		}
-		
+
 		inline float XMFloat2Len(const DirectX::XMFLOAT2& Flt2)
 		{
 			return sqrtf(Flt2.x * Flt2.x + Flt2.y * Flt2.y);
+		}
+
+		inline float XMFloat3Len(const DirectX::XMFLOAT3& Flt3)
+		{
+			return sqrtf(Flt3.x * Flt3.x + Flt3.y * Flt3.y + Flt3.z * Flt3.z);
 		}
 
 		struct Matrix4x4
@@ -258,14 +263,53 @@ namespace XRay
 					Vect = { VectObj.x, VectObj.y, VectObj.z, Vect.m128_f32[3] };
 				}
 
-				inline operator Fvector()
-				{
-					return Fvector().set(Vect.m128_f32[0], Vect.m128_f32[1], Vect.m128_f32[2]);
-				}
-
 				inline operator Fvector&() const
 				{
-					return Fvector().set(Vect.m128_f32[0], Vect.m128_f32[1], Vect.m128_f32[2]);
+					return Fvector({ Vect.m128_f32[0], Vect.m128_f32[1], Vect.m128_f32[2] });
+				}
+
+				inline bool similar(const IntricsVect &v, float E = EPS_L) const
+				{ 
+					return	_abs(Vect.m128_f32[0] - v[0]) < E && 
+							_abs(Vect.m128_f32[1] - v[1]) < E && 
+							_abs(Vect.m128_f32[2] - v[2]) < E &&
+							_abs(Vect.m128_f32[3] - v[3]) < E;
+				}
+
+				__forceinline float GetH() const
+				{
+					if (fis_zero(Vect.m128_f32[0]) && fis_zero(Vect.m128_f32[2]))
+					{
+						return 0.0f;
+					}
+					else
+					{
+						if (fis_zero(Vect.m128_f32[2]))
+							return (Vect.m128_f32[0] > 0.0f) ? -PI_DIV_2 : PI_DIV_2;
+						else if (Vect.m128_f32[2] < 0.0f)
+							return -(atanf(Vect.m128_f32[0] / Vect.m128_f32[2]) - PI);
+						else
+							return -atanf(Vect.m128_f32[0] / Vect.m128_f32[2]);
+					}
+				}
+
+				__forceinline float GetP() const
+				{
+					if (fis_zero(Vect.m128_f32[0]) && fis_zero(Vect.m128_f32[2]))
+					{
+						if (!fis_zero(float(Vect.m128_f32[1])))
+							return (Vect.m128_f32[1] > 0.0f) ? PI_DIV_2 : -PI_DIV_2;
+						else
+							return 0.0f;
+					}
+					else
+					{
+						float hyp = _sqrt(Vect.m128_f32[0] * Vect.m128_f32[0] + Vect.m128_f32[2] * Vect.m128_f32[2]);
+						if (fis_zero(float(hyp)))
+							return (Vect.m128_f32[1] > 0.0f) ? PI_DIV_2 : -PI_DIV_2;
+						else
+							return atanf(Vect.m128_f32[1] / hyp);
+					}
 				}
 			};
 
@@ -335,7 +379,22 @@ namespace XRay
 				Matrix = DirectX::XMMatrixIdentity();
 			}
 
-			inline	void SetHPB(float h, float p, float b);
+			inline void SetHPB(float h, float p, float b);
+			inline void GetHPB(float &h, float &p, float &b) const
+			{
+				float cy = _sqrt(y[1]*y[1] + x[1]*x[1]);
+				if (cy > 16.0f*type_epsilon<float>)
+				{
+					h -= atan2(z[1], z[2]);
+					p -= atan2(-z[1], cy);
+					b -= atan2(x[1], y[1]);
+				}
+				else 
+				{
+					h -= atan2(-x[2], x[0]);
+					b = 0;
+				}
+			}
 
 			/// <summary>Multiplication matrix by matrix</summary>
 			inline void Multiply(Matrix4x4 a, Matrix4x4 b) { Matrix = DirectX::XMMatrixMultiply(a, b); }
@@ -407,6 +466,11 @@ namespace XRay
 				dest.z = v.x* x[2] + v.y* y[2] + v.z* z[2] + w[2];
 			}
 
+			inline void Scale(float x, float y, float z) noexcept
+			{
+				Matrix = DirectX::XMMatrixScaling(x, y, z);
+			}
+
 			inline void TransformTiny(Fvector &v) const
 			{
 				Fvector res;
@@ -414,12 +478,12 @@ namespace XRay
 				v.set(res);
 			}
 
-			inline void TranslateOver(const Fvector &v)
+			inline void TranslateOver(const Fvector &v) noexcept
 			{
 				w = { v.x, v.y, v.z, w[3] };
 			}
 
-			inline void mk_xform(const _quaternion<float> &Q, const Fvector &V)
+			inline void mk_xform(const _quaternion<float> &Q, const Fvector &V) noexcept
 			{
 				float xx = Q.x*Q.x; float yy = Q.y*Q.y; float zz = Q.z*Q.z;
 				float xy = Q.x*Q.y; float xz = Q.x*Q.z; float yz = Q.y*Q.z;
@@ -446,8 +510,6 @@ namespace XRay
 			};
 
 		public:
-			inline operator Fmatrix () { return CastToGSCMatrix(Matrix); }
-//			inline operator Fmatrix& () { return CastToGSCMatrix(Matrix); }
 			inline operator const Fmatrix& () const { return CastToGSCMatrix(Matrix); }
 			inline operator DirectX::XMMATRIX() { return Matrix; }
 			inline operator DirectX::XMMATRIX() const { return Matrix; }
@@ -461,6 +523,16 @@ namespace XRay
 					a._21, a._22, a._23, a._24,
 					a._31, a._32, a._33, a._34,
 					a._41, a._42, a._43, a._44
+				};
+			}
+			inline Matrix4x4 operator*(const Matrix4x4 &a)
+			{
+				return 
+				{
+					x[0] * a.x[0], x[1] * a.x[1], x[2] * a.x[2], x[3] * a.x[3],
+					y[0] * a.y[0], y[1] * a.y[1], y[2] * a.y[2], y[3] * a.y[3],
+					z[0] * a.z[0], z[1] * a.z[1], z[2] * a.z[2], z[3] * a.z[3],
+					w[0] * a.w[0], w[1] * a.w[1], w[2] * a.w[2], w[3] * a.w[3]
 				};
 			}
 		};
@@ -521,6 +593,7 @@ namespace XRay
 				vRight.z, vUp.z, vView.z, 0.0f,
 				-vFrom.dotproduct(vRight), -vFrom.dotproduct(vUp), -vFrom.dotproduct(vView), 1.f);
 		}
+
 		inline void Matrix4x4::InvertMatrixByMatrix(const DirectX::XMMATRIX &a)
 		{
 			// faster than self-invert

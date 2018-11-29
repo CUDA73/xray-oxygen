@@ -186,10 +186,12 @@ void CAI_Crow::switch2_FlyUp()
 {
 	smart_cast<IKinematicsAnimated*>(Visual())->PlayCycle	(m_Anims.m_fly.GetRandom());
 }
+
 void CAI_Crow::switch2_FlyIdle()
 {
 	smart_cast<IKinematicsAnimated*>(Visual())->PlayCycle	(m_Anims.m_idle.GetRandom());
 }
+
 void CAI_Crow::switch2_DeathDead()
 {
 	// AI need to pickup this
@@ -198,19 +200,20 @@ void CAI_Crow::switch2_DeathDead()
 	//
 	smart_cast<IKinematicsAnimated*>(Visual())->PlayCycle	(m_Anims.m_death_dead.GetRandom());
 }
+
 void CAI_Crow::switch2_DeathFall()
 {
 	Fvector V;
-	V.mul(XFORM().k,fSpeed);
-//	m_PhysicMovementControl->SetVelocity(V);
+	V.mul(XFORM().z, fSpeed);
+
 	smart_cast<IKinematicsAnimated*>(Visual())->PlayCycle	(m_Anims.m_death.GetRandom(),TRUE,cb_OnHitEndPlaying,this);
 }
 
-void CAI_Crow::state_Flying		(float fdt)
+void CAI_Crow::state_Flying(float fdt)
 {
 	// Update position and orientation of the planes
 	float fAT = fASpeed * fdt		;
-	Fvector& vDirection = XFORM().k	;
+	Fvector& vDirection = XFORM().z	;
 
 	// Tweak orientation based on last position and goal
 	Fvector vOffset;
@@ -247,7 +250,7 @@ void CAI_Crow::state_Flying		(float fdt)
 
 	// Update position
 	vOldPosition.set(Position());
-	XFORM().setHPB	(vHPB.x,vHPB.y,vHPB.z);
+	XFORM().SetHPB	(vHPB.x,vHPB.y,vHPB.z);
 	Position().mad	(vOldPosition,vDirection,fSpeed*fdt);
 	VERIFY2( valid_pos( Position() ), dbg_valide_pos_string(Position(),this,"state_Flying		(float fdt)").c_str() );
 }
@@ -304,7 +307,7 @@ void CAI_Crow::UpdateCL		()
 	VERIFY2( valid_pos( Position() ), dbg_valide_pos_string(Position(),this," CAI_Crow::UpdateCL		()").c_str() );
 	if (m_pPhysicsShell)	{
 		m_pPhysicsShell->Update		();
-		XFORM().set					(m_pPhysicsShell->mXFORM);
+		XFORM() =					(m_pPhysicsShell->mXFORM);
 	}
 }
 void CAI_Crow::renderable_Render	()
@@ -376,7 +379,7 @@ void CAI_Crow::net_Export	(NET_Packet& P)					// export to server
 	P.w_vec3			(Position());
 	
 	float				yaw, pitch, bank;
-	XFORM().getHPB		(yaw,pitch,bank);
+	XFORM().GetHPB		(yaw,pitch,bank);
 	
 	P.w_float 			(yaw);
 	

@@ -30,7 +30,7 @@ void dx103DFluidVolume::Load( LPCSTR N, IReader *data, u32 dwFlags )
 	m_FluidData.Load(data);
 
 	//	Prepare transform
-	const Fmatrix		&Transform = m_FluidData.GetTransform();
+	const Matrix4x4		&Transform = m_FluidData.GetTransform();
 
 	//	Update visibility data
 	vis.box.min = Fvector3().set(-0.5f, -0.5f, -0.5f);
@@ -106,7 +106,7 @@ void dx103DFluidVolume::Render( float LOD )		// LOD - Level Of Detail  [0.0f - m
 	RCache.set_Geometry( m_Geom );
 
 	//	Render obstacles
-	const xr_vector<Fmatrix> &Obstacles = m_FluidData.GetObstaclesList();
+	const xr_vector<Matrix4x4> &Obstacles = m_FluidData.GetObstaclesList();
 	int iObstNum = Obstacles.size();
 	for (int i=0; i<iObstNum; ++i)
 	{

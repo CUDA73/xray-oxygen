@@ -80,7 +80,7 @@ private:
 	int			m_iRenderTextureWidth;
 	int			m_iRenderTextureHeight;
 
-	D3DXMATRIX	m_gridMatrix;
+	Matrix4x4	m_gridMatrix;
 
 	D3DFORMAT				RTFormats[ RRT_NumRT ];
 	ref_rt					RT[ RRT_NumRT ];
