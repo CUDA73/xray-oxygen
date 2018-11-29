@@ -351,10 +351,18 @@ namespace XRay
 
 			/// <summary>Inversion matrix by matrix</summary>
 			inline void InvertMatrixByMatrix(const DirectX::XMMATRIX &a);
+
 			inline void InvertMatrixByMatrix43(const DirectX::XMMATRIX &a);
 			/// <summary>Call Fbox::xform for DirectX::XMMATRIX</summary>
 			inline void BuildXForm(Fbox &B);
 
+			inline void xform_get(const Fobb& D)
+			{
+				x = { D.m_rotate.i.x, D.m_rotate.i.y, D.m_rotate.i.z, 0 };
+				y = { D.m_rotate.j.x, D.m_rotate.j.y, D.m_rotate.j.z, 0 };
+				z = { D.m_rotate.k.x, D.m_rotate.k.y, D.m_rotate.k.z, 0 };
+				w = { D.m_translate.x, D.m_translate.y, D.m_translate.z, 0 };
+			}
 			inline void Translate(Fvector3 diff)
 			{
 				Matrix = DirectX::XMMatrixTranslation(diff.x, diff.y, diff.z);

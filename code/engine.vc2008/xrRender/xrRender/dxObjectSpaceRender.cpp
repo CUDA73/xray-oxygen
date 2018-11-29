@@ -28,9 +28,9 @@ void dxObjectSpaceRender::dbgRender()
 	RCache.set_Shader(m_shDebug);
 	for (u32 i=0; i<q_debug.boxes.size(); i++)
 	{
-		Fobb&		obb		= q_debug.boxes[i];
-		Matrix4x4		X,S,R;
-		obb.xform_get(X);
+		Fobb& obb = q_debug.boxes[i];
+		Matrix4x4 X, S, R;
+		X.xform_get(obb);
 		RCache.dbg_DrawOBB(X,obb.m_halfsize,D3DCOLOR_XRGB(255,0,0));
 		S = DirectX::XMMatrixScaling(obb.m_halfsize.x, obb.m_halfsize.y, obb.m_halfsize.z);
 		R.Multiply(S, X);

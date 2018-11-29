@@ -35,7 +35,7 @@ public:
 class PARTICLES_API CScriptParticles
 {
  private:
- 	Fmatrix						m_transform;
+	 Matrix4x4					m_transform;
 public:
 	CScriptParticlesCustom*		m_particles;
 								CScriptParticles	(LPCSTR caParticlesName);
@@ -50,7 +50,7 @@ public:
 	bool						IsLooped			() const;
 	void						SetDirection		(const Fvector &dir);
  	void						SetOrientation		(float yaw, float pitch, float roll);
- 	Fvector						LastPosition		() const { return m_transform.c; }
+ 	Fvector						LastPosition		() const { return m_transform.w; }
 
 	void						MoveTo				(const Fvector &pos, const Fvector& vel);
 

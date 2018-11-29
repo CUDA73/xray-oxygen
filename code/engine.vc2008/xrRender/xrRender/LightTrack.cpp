@@ -132,7 +132,7 @@ void	CROS_impl::update	(IRenderable* O)
 
 	// select sample, randomize position inside object
 	vis_data &vis = O->renderable.visual->getVisData();
-	Fvector	position;	O->renderable.xform.transform_tiny	(position,vis.sphere.P);
+	Fvector	position;	O->renderable.xform.TransformTiny	(position,vis.sphere.P);
 	position.y			+=  .3f * vis.sphere.R;
 	Fvector	direction;	direction.random_dir();
 
@@ -229,7 +229,7 @@ void 	CROS_impl::smart_update(IRenderable* O)
 	Fvector	position;
 	VERIFY(dynamic_cast<CROS_impl*>	(O->renderable_ROS()));
 	vis_data &vis = O->renderable.visual->getVisData();
-	O->renderable.xform.transform_tiny( position, vis.sphere.P );
+	O->renderable.xform.TransformTiny( position, vis.sphere.P );
 
 	if ( ticks_to_update <= 0)
 	{

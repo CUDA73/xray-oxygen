@@ -1,4 +1,4 @@
-п»ї////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
 //	Module 		: script_sound.cpp
 //	Created 	: 06.02.2004
 //  Modified 	: 06.02.2004
@@ -40,10 +40,10 @@ void CScriptParticlesCustom::shedule_Update(u32 _dt)
 	CParticlesObject::shedule_Update(_dt);
 	if (m_animator){
 		float dt				= float(_dt)/1000.f; 
-		Fvector prev_pos		= m_animator->XFORM().c;
+		Fvector prev_pos		= m_animator->XFORM().w;
 		m_animator->Update		(dt);
 		Fvector vel;
-		vel.sub					(m_animator->XFORM().c,prev_pos).div(dt);
+		vel.sub					(m_animator->XFORM().w, prev_pos).div(dt);
 		UpdateParent			(m_animator->XFORM(),vel);
 	}
 }
@@ -81,7 +81,7 @@ void CScriptParticlesCustom::remove_owner	()
 CScriptParticles::CScriptParticles(LPCSTR caParticlesName)
 {
 	m_particles = xr_new<CScriptParticlesCustom>(this, caParticlesName);
-	m_transform.identity();
+	m_transform.Identity();
 }
 
 CScriptParticles::~CScriptParticles()
@@ -104,7 +104,7 @@ void CScriptParticles::Play()
 void CScriptParticles::PlayAtPos(const Fvector &position)
 {
 	VERIFY(m_particles);
-	m_transform.translate_over(position);
+	m_transform.TranslateOver(position);
 	m_particles->UpdateParent(m_transform, zero_vel);
 	m_particles->Play(false);
 	m_particles->UpdateParent(m_transform, zero_vel);
@@ -125,7 +125,7 @@ void CScriptParticles::StopDeffered()
 void CScriptParticles::MoveTo	(const Fvector &pos, const Fvector& vel)
 {
 	VERIFY(m_particles); 
-	m_transform.translate_over(pos);
+	m_transform.TranslateOver(pos);
 	m_particles->UpdateParent(m_transform, vel);
 }
 
@@ -143,21 +143,21 @@ bool CScriptParticles::IsLooped	() const
 
 void CScriptParticles::SetDirection(const Fvector &dir)
  {
-	Fmatrix	matrix;
-	matrix.identity();
-	matrix.k.set(dir);
-	Fvector::generate_orthonormal_basis_normalized(matrix.k, matrix.j, matrix.i);
-	matrix.translate_over(m_transform.c);
-	m_transform.set(matrix);
+	Matrix4x4	matrix;
+	matrix.Identity();
+	matrix.z = (dir);
+	Fvector::generate_orthonormal_basis_normalized(matrix.z, matrix.y, matrix.x);
+	matrix.TranslateOver(m_transform.w);
+	m_transform = matrix;
 	m_particles->UpdateParent(matrix, zero_vel);
 }
 
 void CScriptParticles::SetOrientation(float yaw, float pitch, float roll)
  {
-	Fmatrix matrix;
-	matrix.setHPB(yaw, pitch, roll); 
-	matrix.translate_over(m_transform.c);
-	m_transform.set(matrix);
+	Matrix4x4 matrix;
+	matrix.SetHPB(yaw, pitch, roll); 
+	matrix.TranslateOver(m_transform.w);
+	m_transform = (matrix);
 	m_particles->UpdateParent(matrix, zero_vel);
 }
 

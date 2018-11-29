@@ -679,7 +679,7 @@ void CDrawUtilities::DrawBox(const Fvector& offs, const Fvector& Size, BOOL bSol
 void CDrawUtilities::DrawOBB(const Matrix4x4& parent, const Fobb& box, u32 clr_s, u32 clr_w)
 {
     Matrix4x4 R,S,X;
-    box.xform_get	(R);
+    R.xform_get	(box);
     S = DirectX::XMMatrixScaling(box.m_halfsize.x*2.f,box.m_halfsize.y*2.f,box.m_halfsize.z*2.f);
     X.Multiply43(S, R);
     R.Multiply43(X, parent);
