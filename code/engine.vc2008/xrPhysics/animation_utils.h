@@ -5,7 +5,7 @@ struct XRPHYSICS_API anim_bone_fix
 {
 	CBoneInstance *bone;
 	CBoneInstance *parent;
-	Fmatrix		  matrix;
+	Matrix4x4		  matrix;
 
 	anim_bone_fix();
 	~anim_bone_fix();

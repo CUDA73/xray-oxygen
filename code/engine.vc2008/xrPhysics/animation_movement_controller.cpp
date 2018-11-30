@@ -117,10 +117,11 @@ static void get_animation_root_position(Fmatrix &pos, IKinematics* K, IKinematic
 
 	CBoneInstance BI = K->LL_GetBoneInstance(0);
 
-	KA->LL_BoneMatrixBuild(BI, &Fidentity, keys);
+	KA->LL_BoneMatrixBuild(BI, (Matrix4x4*)&Fidentity, keys);
 	pos.set(BI.mTransform);
 	control_blend->blendAmount = sv_amount;
 }
+
 void animation_movement_controller::animation_root_position(Fmatrix &pos)
 {
 	get_animation_root_position(pos, m_pKinematicsC, m_pKinematicsA, m_control_blend);
@@ -179,8 +180,8 @@ void animation_movement_controller::RootBoneCallback(CBoneInstance* B)
 
 	animation_movement_controller* O = (animation_movement_controller*)(B->callback_param());
 	O->DBG_verify_position_not_chaged();
-	B->mTransform.set(Fidentity);
-	R_ASSERT2(_valid(B->mTransform), "animation_movement_controller::RootBoneCallback");
+	B->mTransform = (Fidentity);
+	R_ASSERT2(_valid(CastToGSCMatrix(B->mTransform)), "animation_movement_controller::RootBoneCallback");
 }
 
 bool	animation_movement_controller::IsActive() const

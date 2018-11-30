@@ -131,7 +131,7 @@ void CPHCapture::PullingUpdate()
 	Fvector dir;
 	Fvector capture_bone_position;
 
-	capture_bone_position.set(m_capture_bone->mTransform.c);
+	capture_bone_position.set(m_capture_bone->mTransform.w);
 	m_character->PhysicsRefObject()->ObjectXFORM().transform_tiny(capture_bone_position);
 	m_taget_element->GetGlobalPositionDynamic(&dir);
 	dir.sub(capture_bone_position, dir);
@@ -267,7 +267,7 @@ void CPHCapture::CapturedUpdate()
 
 	Fvector capture_bone_position;
 
-	capture_bone_position.set(m_capture_bone->mTransform.c);
+	capture_bone_position.set(m_capture_bone->mTransform.w);
 	m_character->PhysicsRefObject()->ObjectXFORM().transform_tiny(capture_bone_position);
 	dBodySetPosition(m_body, capture_bone_position.x, capture_bone_position.y, capture_bone_position.z);
 }

@@ -146,8 +146,8 @@ Fvector& global_hit_position(Fvector &gp, CObject& ea, const SHit& H)
 	VERIFY(ea.Visual());
 	IKinematics	*K = ea.Visual()->dcast_PKinematics();
 	VERIFY(K);
-	K->LL_GetTransform(H.bone()).transform_tiny(gp, H.bone_space_position());
-	ea.XFORM().transform_tiny(gp);
+	K->LL_GetTransform(H.bone()).TransformTiny(gp, H.bone_space_position());
+	ea.XFORM().TransformTiny(gp);
 	return gp;
 }
 
@@ -168,8 +168,8 @@ type_motion::edirection	type_motion::dir(CObject& ea, const SHit& H, float& angl
 	}
 	dir.mul(1.f / m);
 
-	Fvector z_dir = { ea.XFORM().k.x, 0.f, ea.XFORM().k.z };
-	Fvector x_dir = { ea.XFORM().i.x, 0.f, ea.XFORM().i.z };
+	Fvector z_dir = { ea.XFORM().z[0], 0.f, ea.XFORM().z[2] };
+	Fvector x_dir = { ea.XFORM().x[0], 0.f, ea.XFORM().x[2] };
 	z_dir.normalize_safe(); x_dir.normalize_safe();
 
 	float front_factor = dir.dotproduct(z_dir);

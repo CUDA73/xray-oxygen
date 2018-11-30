@@ -154,16 +154,18 @@ void	CODEGeom::get_xform(Fmatrix& form) const
 	PHDynamicData::DMXPStoFMX(rot, pos, form);
 }
 
-bool	CODEGeom::collide_fluids() const
+bool CODEGeom::collide_fluids() const
 {
 	return !m_flags.test(SBoneShape::sfNoFogCollider);
 }
-void	CODEGeom::get_Box(Fmatrix& form, Fvector&	sz)const
+
+void CODEGeom::get_Box(const Fmatrix& form, Fvector& sz) const
 {
-	get_xform(form);
+	Fmatrix *Temp = const_cast<Fmatrix*>(&form);
+	get_xform(*Temp);
 	Fvector c;
 	t_get_box(this, form, sz, c);
-	form.c = c;
+	(*Temp).c = c;
 }
 
 void CODEGeom::set_static_ref_form(const Fmatrix& form)

@@ -46,7 +46,7 @@ public:
 	void		get_local_form_bt(Fmatrix& form);	    //for built
 	virtual		void		get_xform(Fmatrix& form) const;
 	virtual		void		dbg_draw(float scale, u32 color, Flags32 flags) const;
-	virtual		void		get_Box(Fmatrix& form, Fvector&	sz)const;
+	virtual		void		get_Box(const Fmatrix& form, Fvector&	sz)const;
 	virtual		bool		collide_fluids() const;
 	void		set_static_ref_form(const Fmatrix& form);		//for built
 	virtual		void		get_max_area_dir_bt(Fvector& dir) = 0;

@@ -49,18 +49,19 @@ public:
 	PHDynamicData(unsigned int numOfchilds, dBodyID body);
 	PHDynamicData();
 
-	void GetWorldMX(Fmatrix& aTransform)
+	void GetWorldMX(Matrix4x4& aTransform)
 	{
 		dMatrix3 R;
 		dQtoR(dBodyGetQuaternion(body), R);
 		DMXPStoFMX(R, dBodyGetPosition(body), aTransform);
 	}
+
 	void GetTGeomWorldMX(Fmatrix& aTransform)
 	{
 		if (!transform)
 			return;
 
-		Fmatrix NormTransform, Transform;
+		Matrix4x4 NormTransform, Transform;
 		dVector3 P0 = { 0,0,0,-1 };
 		Fvector Translate, Translate1;
 
@@ -76,15 +77,15 @@ public:
 		aTransform.translate_over(Translate1);
 		aTransform.mulA_43(Transform);
 	}
-	static inline void DMXPStoFMX(const dReal* R, const dReal* pos, Fmatrix& aTransform)
+	static inline void DMXPStoFMX(const dReal* R, const dReal* pos, Matrix4x4& aTransform)
 	{
 		std::memcpy(&aTransform, R, sizeof(dMatrix3));
-		aTransform.transpose();
-		std::memcpy(&aTransform.c, pos, sizeof(Fvector));
-		aTransform._14 = 0.f;
-		aTransform._24 = 0.f;
-		aTransform._34 = 0.f;
-		aTransform._44 = 1.f;
+		aTransform = DirectX::XMMatrixTranspose(aTransform);
+		std::memcpy(&aTransform.z, pos, sizeof(Fvector));
+		aTransform.x[3] = 0.f;
+		aTransform.y[3] = 0.f;
+		aTransform.z[3] = 0.f;
+		aTransform.w[3] = 1.f;
 	};
 
 	static inline void DMXtoFMX(const dReal* R, Fmatrix& aTransform)

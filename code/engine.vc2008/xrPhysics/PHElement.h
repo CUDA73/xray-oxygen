@@ -149,11 +149,11 @@ public:																																				//
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	bool						AnimToVel(float dt, float l_limit, float a_limit);
 
-	void						BoneGlPos(Fmatrix &m, const Fmatrix &BoneTransform)const;
+	void						BoneGlPos(Matrix4x4 &m, const Matrix4x4 &BoneTransform)const;
 	void						ToBonePos(const CBoneInstance* B, motion_history_state history_state);
-	void						ToBonePos(const Fmatrix &BoneTransform, motion_history_state history_state);
-	inline		void						ActivatingPos(const Fmatrix &BoneTransform);
-	inline		void						CalculateBoneTransform(Fmatrix &bone_transform)const;
+	void						ToBonePos(const Matrix4x4 &BoneTransform, motion_history_state history_state);
+	inline		void			ActivatingPos(const Fmatrix &BoneTransform);
+	inline		void			CalculateBoneTransform(Matrix4x &bone_transform)const;
 
 	virtual void						dbg_draw_velocity(float scale, u32 color);
 	virtual void						dbg_draw_force(float scale, u32 color);
@@ -215,13 +215,13 @@ public:																																				//
 	virtual void						setQuaternion(const Fquaternion& quaternion);												//
 	virtual void						SetGlobalPositionDynamic(const Fvector& position);														//
 	virtual void						GetGlobalPositionDynamic(Fvector* v);																	//
-	virtual void						cv2obj_Xfrom(const Fquaternion& q, const Fvector& pos, Fmatrix& xform);						//
-	virtual void						cv2bone_Xfrom(const Fquaternion& q, const Fvector& pos, Fmatrix& xform);						//
-	virtual void		__stdcall			InterpolateGlobalTransform(Fmatrix* m);																	//called UpdateCL vis influent
+	virtual void						cv2obj_Xfrom(const Fquaternion& q, const Fvector& pos, Matrix4x4& xform);						//
+	virtual void						cv2bone_Xfrom(const Fquaternion& q, const Fvector& pos, Matrix4x4& xform);						//
+	virtual void						InterpolateGlobalTransform(Matrix4x4* m);																	//called UpdateCL vis influent
 	virtual void						InterpolateGlobalPosition(Fvector* v);																	//aux
-	virtual void						GetGlobalTransformDynamic(Fmatrix* m) const;																	//aux
-	inline			void						InverceLocalForm(Fmatrix&);
-	inline			void						MulB43InverceLocalForm(Fmatrix&) const;
+	virtual void						GetGlobalTransformDynamic(Matrix4x4* m) const;																	//aux
+	inline			void				InverceLocalForm(Matrix4x4&);
+	inline			void				MulB43InverceLocalForm(Matrix4x4&) const;
 
 	////////////////////////////////////////////////////Structure/////////////////////////////////////////////////////////////////////////////////
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -249,19 +249,19 @@ public:																																				//
 	virtual void						Activate(bool disable = false, bool not_set_bone_callbacks = false);									//some isues not to be aux
 	virtual void						Activate(const Fmatrix& start_from, bool disable = false);										//some isues not to be aux
 	virtual void						Deactivate();																						//aux																																			//aux
-	void						SetBoneCallback();
-	void						ClearBoneCallback();
-	void						CreateSimulBase();//create body & cpace																//aux
-	void						ReInitDynamics(const Fmatrix &shift_pivot, float density);												//set body & geom positions
-	void						PresetActive();																						//
-	void						build();																		//aux
-	void						build(bool disable);															//aux
-	void						destroy();																		//called anywhere ph state influent
-	void						Start();																		//aux
-	void						RunSimulation();																		//called anywhere ph state influent
-	void						RunSimulation(const Fmatrix& start_from);											//
-	void						ClearDestroyInfo();
-	void						GetAnimBonePos(Fmatrix &bp);
+	void								SetBoneCallback();
+	void								ClearBoneCallback();
+	void								CreateSimulBase();//create body & cpace																//aux
+	void								ReInitDynamics(const Fmatrix &shift_pivot, float density);												//set body & geom positions
+	void								PresetActive();																						//
+	void								build();																		//aux
+	void								build(bool disable);															//aux
+	void								destroy();																		//called anywhere ph state influent
+	void								Start();																		//aux
+	void								RunSimulation();																		//called anywhere ph state influent
+	void								RunSimulation(const Fmatrix& start_from);											//
+	void								ClearDestroyInfo();
+	void								GetAnimBonePos(Matrix4x4 &bp);
 	//		bool						CheckBreakConsistent					()
 	CPHElement();																						//aux
 	virtual ~CPHElement();																						//aux

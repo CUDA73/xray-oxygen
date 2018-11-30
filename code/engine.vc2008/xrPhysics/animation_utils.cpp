@@ -4,7 +4,7 @@
 #include "../Include/xrRender/Kinematics.h"
 #include "../xrEngine/bone.h"
 
-anim_bone_fix::anim_bone_fix() : bone(nullptr), parent(nullptr), matrix(Fmatrix().identity())
+anim_bone_fix::anim_bone_fix() : bone(nullptr), parent(nullptr), matrix(DirectX::XMMatrixIdentity())
 {
 }
 anim_bone_fix::~anim_bone_fix()
@@ -17,9 +17,9 @@ void anim_bone_fix::callback(CBoneInstance *BI)
 	anim_bone_fix* fix = (anim_bone_fix*)BI->callback_param();
 	VERIFY(fix->bone);
 	VERIFY(fix->parent);
-	BI->mTransform.mul_43(fix->parent->mTransform, fix->matrix);
+	BI->mTransform.Multiply43(fix->matrix, fix->parent->mTransform);
 
-	R_ASSERT2(_valid(BI->mTransform), "anim_bone_fix::	callback");
+	R_ASSERT2(_valid(CastToGSCMatrix(BI->mTransform)), "anim_bone_fix::	callback");
 }
 
 void anim_bone_fix::fix(u16 bone_id, IKinematics &K)
@@ -34,11 +34,13 @@ void anim_bone_fix::fix(u16 bone_id, IKinematics &K)
 
 	bone = &bi;
 	CBoneData &bd = K.LL_GetData(bone_id);
+	Matrix4x4 Inv;  Inv.InvertMatrixByMatrix(parent->mTransform);
 
 	parent = &K.LL_GetBoneInstance(bd.GetParentID());
-	matrix.mul_43(Fmatrix().invert(parent->mTransform), bi.mTransform);
+	matrix.Multiply43(bi.mTransform, Inv);
 	bi.set_callback(bctCustom, callback, this, TRUE);
 }
+
 void	anim_bone_fix::refix()
 {
 	//return;

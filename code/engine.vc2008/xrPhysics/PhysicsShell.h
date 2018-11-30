@@ -56,7 +56,7 @@ class	XRPHYSICS_API	IPhysicsBase :
 	public iphysics_scripted_class
 {
 public:
-	Fmatrix						mXFORM;					// In parent space
+	Matrix4x4					mXFORM;					// In parent space
 public:
 	virtual		void			Activate(const Fmatrix& m0, float dt01, const Fmatrix& m2, bool disable = false) = 0;
 	virtual		void			Activate(const Fmatrix &transform, const Fvector& lin_vel, const Fvector& ang_vel, bool disable = false) = 0;

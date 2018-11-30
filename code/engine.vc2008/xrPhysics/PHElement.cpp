@@ -52,7 +52,7 @@ CPHElement::CPHElement()																															//aux
 	m_fratures_holder = NULL;
 
 	m_flags.assign(0);
-	mXFORM.identity();
+	mXFORM.Identity();
 	m_mass.setZero();
 	m_mass_center.set(0, 0, 0);
 	m_volume = 0.f;
@@ -269,7 +269,7 @@ void CPHElement::TransformPosition(const Fmatrix &form, motion_history_state his
 
 	VERIFY(_valid(form));
 	R_ASSERT2(m_body, "body is not created");
-	Fmatrix bm;
+	Matrix4x4 bm;
 	PHDynamicData::DMXPStoFMX(dBodyGetRotation(m_body), dBodyGetPosition(m_body), bm);
 	Fmatrix new_bm;
 	new_bm.mul(form, bm);
@@ -306,7 +306,7 @@ void		CPHElement::ClearBoneCallback()
 
 void CPHElement::Activate(const Fmatrix &transform, const Fvector& lin_vel, const Fvector& ang_vel, bool disable) {
 	VERIFY(!isActive());
-	mXFORM.set(transform);
+	mXFORM = (transform);
 	Start();
 	SetTransform(transform, mh_unspecified);
 
@@ -664,7 +664,8 @@ void CPHElement::applyImpact(const SPHImpact& I)
 		applyImpulseTrace(pos, dir, val, I.geom);
 	}
 }
-void CPHElement::InterpolateGlobalTransform(Fmatrix* m) {
+void CPHElement::InterpolateGlobalTransform(Matrix4x4* m) 
+{
 	if (!m_flags.test(flUpdate))
 	{
 		GetGlobalTransformDynamic(m);
@@ -672,12 +673,13 @@ void CPHElement::InterpolateGlobalTransform(Fmatrix* m) {
 		return;
 	}
 	m_body_interpolation.InterpolateRotation(*m);
-	m_body_interpolation.InterpolatePosition(m->c);
+	m_body_interpolation.InterpolatePosition(m->z);
 	MulB43InverceLocalForm(*m);
 	m_flags.set(flUpdate, FALSE);
-	VERIFY(_valid(*m));
+//	VERIFY(_valid(*m));
 }
-void CPHElement::GetGlobalTransformDynamic(Fmatrix* m) const
+
+void CPHElement::GetGlobalTransformDynamic(Matrix4x4* m) const
 {
 	PHDynamicData::DMXPStoFMX(dBodyGetRotation(m_body), dBodyGetPosition(m_body), *m);
 	MulB43InverceLocalForm(*m);
@@ -720,7 +722,7 @@ void CPHElement::RunSimulation(const Fmatrix& start_from)
 void CPHElement::StataticRootBonesCallBack(CBoneInstance* B)
 {
 	VERIFY(false);
-	Fmatrix parent;
+	Matrix4x4 parent;
 	VERIFY2(isActive(), "the element is not active");
 	VERIFY(_valid(m_shell->mXFORM));
 
@@ -731,7 +733,7 @@ void CPHElement::StataticRootBonesCallBack(CBoneInstance* B)
 		VERIFY(!ph_world->Processing());
 		VERIFY(_valid(B->mTransform));
 		VERIFY(!m_shell->dSpace()->lock_count);
-		mXFORM.set(B->mTransform);
+		mXFORM = (B->mTransform);
 
 		Fmatrix global_transform;
 
@@ -743,8 +745,8 @@ void CPHElement::StataticRootBonesCallBack(CBoneInstance* B)
 		m_flags.set(flActivating, FALSE);
 		if (!m_parent_element)
 		{
-			m_shell->m_object_in_root.set(mXFORM);
-			m_shell->m_object_in_root.invert();
+			m_shell->m_object_in_root = (mXFORM);
+			m_shell->m_object_in_root.InvertMatrixByMatrix(m_shell->m_object_in_root);
 			m_shell->SetNotActivating();
 		}
 		B->set_callback_overwrite(TRUE);
@@ -757,8 +759,8 @@ void CPHElement::StataticRootBonesCallBack(CBoneInstance* B)
 	VERIFY(valid_pos(B->mTransform.c, phBoundaries));
 
 	{
-		parent.invert(m_shell->mXFORM);
-		B->mTransform.mul_43(parent, mXFORM);
+		parent.InvertMatrixByMatrix(m_shell->mXFORM);
+		B->mTransform.Multiply43(mXFORM, parent);
 	}
 
 	VERIFY_RMATRIX(B->mTransform);
@@ -766,13 +768,13 @@ void CPHElement::StataticRootBonesCallBack(CBoneInstance* B)
 	VERIFY2(_valid(B->mTransform), "Bones callback returns bad matrix");
 }
 
-void CPHElement::BoneGlPos(Fmatrix &m, const Fmatrix &BoneTransform) const
+void CPHElement::BoneGlPos(Matrix4x4 &m, const Matrix4x4 &BoneTransform) const
 {
 	VERIFY(m_shell);
-	m.mul_43(m_shell->mXFORM, BoneTransform);
+	m.Multiply43(BoneTransform, m_shell->mXFORM);
 }
 
-void CPHElement::GetAnimBonePos(Fmatrix &bp)
+void CPHElement::GetAnimBonePos(Matrix4x4 &bp)
 {
 	VERIFY(m_shell->PKinematics());
 	IKinematics *pK = m_shell->PKinematics();
@@ -780,7 +782,7 @@ void CPHElement::GetAnimBonePos(Fmatrix &bp)
 	CBoneInstance *BI = &pK->LL_GetBoneInstance(m_SelfID);
 	if (!BI->callback())//.
 	{
-		bp.set(BI->mTransform);
+		bp = (BI->mTransform);
 		return;
 	}
 
@@ -807,13 +809,13 @@ bool CPHElement::AnimToVel(float dt, float l_limit, float a_limit)
 
 	IPhysicsShellHolder	*ph = PhysicsRefObject();
 	VERIFY(ph);
-	Fmatrix bpl; GetAnimBonePos(bpl);
+	Matrix4x4 bpl; GetAnimBonePos(bpl);
 	Fmatrix bp; bp.mul_43(ph->ObjectXFORM(), bpl);
 
-	Fmatrix cp;
+	Matrix4x4 cp;
 	GetGlobalTransformDynamic(&cp);
 
-	cp.invert();
+	cp.InvertMatrixByMatrix(cp);
 	Fmatrix diff; diff.mul_43(cp, bp);
 	if (dt < EPS_S)
 		dt = EPS_S;
@@ -839,7 +841,7 @@ bool CPHElement::AnimToVel(float dt, float l_limit, float a_limit)
 
 	return ret;
 }
-void	CPHElement::ToBonePos(const Fmatrix &BoneTransform, motion_history_state history_state)
+void	CPHElement::ToBonePos(const Matrix4x4 &BoneTransform, motion_history_state history_state)
 {
 	VERIFY2(!ph_world->Processing(), PhysicsRefObject()->ObjectNameSect());
 	VERIFY(_valid(BoneTransform));
@@ -1075,7 +1077,7 @@ void	CPHElement::add_geom(CODEGeom* g)
 	Fmatrix gf;
 	g->get_xform(gf);
 
-	Fmatrix bf;
+	Matrix4x4 bf;
 	PHDynamicData::DMXPStoFMX(dBodyGetRotation(m_body), dBodyGetPosition(m_body), bf);
 
 	Fmatrix diff = Fmatrix().mul_43(Fmatrix().invert(bf), gf);
@@ -1352,7 +1354,7 @@ void CPHElement::PresetActive()
 	if (isActive()) return;
 
 	CBoneInstance& B = m_shell->PKinematics()->LL_GetBoneInstance(m_SelfID);
-	mXFORM.set(B.mTransform);
+	mXFORM = (B.mTransform);
 
 	Fmatrix global_transform;
 	global_transform.mul_43(m_shell->mXFORM, mXFORM);
@@ -1360,8 +1362,8 @@ void CPHElement::PresetActive()
 
 	if (!m_parent_element)
 	{
-		m_shell->m_object_in_root.set(mXFORM);
-		m_shell->m_object_in_root.invert();
+		m_shell->m_object_in_root = (mXFORM);
+		m_shell->m_object_in_root.InvertMatrixByMatrix(m_shell->m_object_in_root);
 	}
 
 	//////////////////////////////////////////////////////////////
@@ -1397,19 +1399,19 @@ u16	CPHElement::numberOfGeoms()const
 	return CPHGeometryOwner::numberOfGeoms();
 }
 
-void CPHElement::cv2bone_Xfrom(const Fquaternion& q, const Fvector& pos, Fmatrix& xform)
+void CPHElement::cv2bone_Xfrom(const Fquaternion& q, const Fvector& pos, Matrix4x4& xform)
 {
 	VERIFY2(_valid(q) && _valid(pos), "cv2bone_Xfrom receive wrong data");
-	xform.rotation(q);
-	xform.c.set(pos);
+	xform = DirectX::XMMatrixRotationQuaternion({ q.x, q.y, q.z, q.w });
+	xform.z = (pos);
 
 	MulB43InverceLocalForm(xform);
 	VERIFY2(_valid(xform), "cv2bone_Xfrom returns wrong data");
 }
-void CPHElement::cv2obj_Xfrom(const Fquaternion& q, const Fvector& pos, Fmatrix& xform)
+void CPHElement::cv2obj_Xfrom(const Fquaternion& q, const Fvector& pos, Matrix4x4& xform)
 {
 	cv2bone_Xfrom(q, pos, xform);
-	xform.mulB_43(m_shell->m_object_in_root);
+	xform.Multiply43(m_shell->m_object_in_root, xform);
 	VERIFY2(_valid(xform), "cv2obj_Xfrom returns wrong data");
 }
 
@@ -1491,13 +1493,13 @@ void CPHElement::dbg_draw_velocity(float scale, u32 color)
 	VERIFY(isActive());
 	VERIFY(m_shell);
 	VERIFY(m_shell->PKinematics());
-	Fmatrix bone;
+	Matrix4x4 bone;
 	GetGlobalTransformDynamic(&bone);
 	VERIFY(m_body);
 	dVector3 res;
-	dBodyGetPointVel(m_body, bone.c.x, bone.c.y, bone.c.z, res);
-	debug_output().DBG_DrawPoint(bone.c, 0.01f, color);
-	debug_output().DBG_DrawLine(bone.c, Fvector().add(bone.c, cast_fv(res).mul(scale)), color);
+	dBodyGetPointVel(m_body, bone.z[0], bone.z[1], bone.z[2], res);
+	debug_output().DBG_DrawPoint(bone.z, 0.01f, color);
+	debug_output().DBG_DrawLine(bone.z, Fvector().add(bone.z, cast_fv(res).mul(scale)), color);
 }
 
 static void dBodyGetPointForce(dBodyID b, dReal px, dReal py, dReal pz,
@@ -1520,13 +1522,13 @@ void CPHElement::dbg_draw_force(float scale, u32 color)
 	VERIFY(isActive());
 	VERIFY(m_shell);
 	VERIFY(m_shell->PKinematics());
-	Fmatrix bone;
+	Matrix4x4 bone;
 	GetGlobalTransformDynamic(&bone);
 	VERIFY(m_body);
 	dVector3 res;
-	dBodyGetPointForce(m_body, bone.c.x, bone.c.y, bone.c.z, res);
-	debug_output().DBG_DrawPoint(bone.c, 0.01f, color);
-	debug_output().DBG_DrawLine(bone.c, Fvector().add(bone.c, cast_fv(res).mul(scale)), color);
+	dBodyGetPointForce(m_body, bone.z[0], bone.z[1], bone.z[2], res);
+	debug_output().DBG_DrawPoint(bone.z, 0.01f, color);
+	debug_output().DBG_DrawLine(bone.z, Fvector().add(bone.z, cast_fv(res).mul(scale)), color);
 }
 
 void	CPHElement::dbg_draw_geometry(float scale, u32 color, Flags32 flags /*= Flags32().assign( 0 )*/) const

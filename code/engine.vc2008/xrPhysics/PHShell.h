@@ -43,7 +43,7 @@ protected:
 	dSpaceID m_space;
 
 public:
-	Fmatrix m_object_in_root;
+	Matrix4x4 m_object_in_root;
 	CPHShell();
 	virtual ~CPHShell();
 	virtual void applyImpulseTrace(const Fvector& pos, const Fvector& dir, float val, const u16 id);
@@ -241,7 +241,7 @@ public:
 	virtual void AnimatorOnFrame();
 	virtual void GetGlobalTransformDynamic(Fmatrix* m);
 	virtual void GetGlobalPositionDynamic(Fvector* v);
-	virtual Fmatrix& ObjectInRoot() { return m_object_in_root; }
+	virtual Matrix4x4& ObjectInRoot() { return m_object_in_root; }
 	virtual void ObjectToRootForm(const Fmatrix& form);
 	virtual dSpaceID dSpace() { return m_space; }
 	virtual void SetTransform(const Fmatrix& m0, motion_history_state history_state);

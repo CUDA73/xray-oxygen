@@ -262,11 +262,12 @@ namespace XRay
 				{
 					Vect = { VectObj.x, VectObj.y, VectObj.z, Vect.m128_f32[3] };
 				}
-
+#pragma warning(disable: 4239)
 				inline operator Fvector&() const
 				{
 					return Fvector({ Vect.m128_f32[0], Vect.m128_f32[1], Vect.m128_f32[2] });
 				}
+#pragma warning(default: 4239)
 
 				inline bool similar(const IntricsVect &v, float E = EPS_L) const
 				{ 
@@ -466,9 +467,9 @@ namespace XRay
 				dest.z = v.x* x[2] + v.y* y[2] + v.z* z[2] + w[2];
 			}
 
-			inline void Scale(float x, float y, float z) noexcept
+			inline void Scale(float ax, float ay, float az) noexcept
 			{
-				Matrix = DirectX::XMMatrixScaling(x, y, z);
+				Matrix = DirectX::XMMatrixScaling(ax, ay, az);
 			}
 
 			inline void TransformTiny(Fvector &v) const
