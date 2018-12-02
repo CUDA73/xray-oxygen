@@ -101,7 +101,8 @@ public:
 
 	// Geometry xform
 	virtual void						Center				(Fvector& C) const;
-	IC const Matrix4x4&					XFORM				()			 const	{ VERIFY(_valid(renderable.xform));	return renderable.xform;	}
+	IC const Matrix4x4&					XFORM			()			 const	{ VERIFY(_valid(renderable.xform));	return renderable.xform; }
+	//IC const Fmatrix&					XFORM				()			 const	{ VERIFY(_valid(renderable.xform));	return renderable.xform; }
 	ICF Matrix4x4&						XFORM				()					{ return renderable.xform;			}
 	void								spatial_register	() override;
 	void								spatial_unregister	() override;

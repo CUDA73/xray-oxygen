@@ -56,7 +56,7 @@ CPHShell::CPHShell()
 	m_space = nullptr;
 	m_pKinematics = nullptr;
 	m_spliter_holder = nullptr;
-	m_object_in_root.identity();
+	m_object_in_root.Identity();
 	m_active_count = 0;
 	m_pPhysicsShellAnimatorC = nullptr;
 }
@@ -224,7 +224,7 @@ void CPHShell::Update()
 	for (CPHElement* it : elements)
 		it->Update();
 
-	mXFORM.set((*elements.begin())->mXFORM);
+	mXFORM = ((*elements.begin())->mXFORM);
 	VERIFY2(_valid(mXFORM), "invalid position in update");
 }
 
@@ -406,7 +406,7 @@ void CPHShell::update_root_transforms()
 
 	if (anim_root == phys_root)
 	{
-		mXFORM.set(root_element().mXFORM);
+		mXFORM = (root_element().mXFORM);
 		return;
 	}
 }
@@ -425,9 +425,9 @@ void  CPHShell::StataticRootBonesCallBack(CBoneInstance* B)
 	E->StataticRootBonesCallBack(B);
 }
 
-void CPHShell::SetTransform(const Fmatrix& m0, motion_history_state history_state)
+void CPHShell::SetTransform(const Matrix4x4& m0, motion_history_state history_state)
 {
-	mXFORM.set(m0);
+	mXFORM = (m0);
 
 	for (CPHElement* it : elements)
 		it->SetTransform(m0, history_state);
@@ -526,20 +526,20 @@ void CPHShell::set_AngularVel(const Fvector& velocity)
 		it->set_AngularVel(velocity);
 }
 
-void CPHShell::TransformPosition(const Fmatrix &form, motion_history_state history_state)
+void CPHShell::TransformPosition(const Matrix4x4 &form, motion_history_state history_state)
 {
 	for (CPHElement* it : elements) 
 		it->TransformPosition(form, history_state);
 }
 
-void CPHShell::SetGlTransformDynamic(const Fmatrix &form)
+void CPHShell::SetGlTransformDynamic(const Matrix4x4 &form)
 {
 	VERIFY(isActive());
 	VERIFY(_valid(form));
-	Fmatrix current, replace;
+	Matrix4x4 current, replace;
 	GetGlobalTransformDynamic(&current);
-	current.invert();
-	replace.mul(form, current);
+	current.InvertMatrixByMatrix(form);
+	replace.Multiply(current,form);
 	TransformPosition(replace, mh_clear);
 }
 
@@ -647,14 +647,14 @@ bool shape_is_physic(const SBoneShape& shape)
 	return !no_physics_shape(shape);
 }
 
-void CPHShell::AddElementRecursive(IPhysicsElementEx* root_e, u16 id, Fmatrix global_parent, u16 element_number, bool* vis_check)
+void CPHShell::AddElementRecursive(IPhysicsElementEx* root_e, u16 id, Matrix4x4 global_parent, u16 element_number, bool* vis_check)
 {
 	const IBoneData& bone_data = m_pKinematics->GetBoneData(u16(id));
 	const SJointIKData& joint_data = bone_data.get_IK_data();
 
-	Fmatrix fm_position;
-	fm_position.set(bone_data.get_bind_transform());
-	fm_position.mulA_43(global_parent);
+	Matrix4x4 fm_position;
+	fm_position = (bone_data.get_bind_transform());
+	fm_position.MultiplyA_43(global_parent);
 
 	Flags64 mask;
 	mask.assign(m_pKinematics->LL_GetBonesVisible());
@@ -698,7 +698,7 @@ void CPHShell::AddElementRecursive(IPhysicsElementEx* root_e, u16 id, Fmatrix gl
 	{
 		if (joint_data.type == jtRigid && root_e)
 		{
-			Fmatrix vs_root_position;
+			Matrix4x4 vs_root_position;
 			vs_root_position.set(root_e->mXFORM);
 			vs_root_position.invert();
 			vs_root_position.mulB_43(fm_position);
@@ -733,7 +733,7 @@ void CPHShell::AddElementRecursive(IPhysicsElementEx* root_e, u16 id, Fmatrix gl
 		{
 			E = P_create_Element();
 			E->m_SelfID = id;
-			E->mXFORM.set(fm_position);
+			E->mXFORM = (fm_position);
 			E->SetMaterial(bone_data.get_game_mtl_idx());
 
 			E->set_ParentElement(root_e);
@@ -1008,12 +1008,12 @@ void CPHShell::UpdateRoot()
 
 }
 
-Fmatrix& CPHShell::get_animation_root_matrix(Fmatrix& m)
+Matrix4x4& CPHShell::get_animation_root_matrix(Matrix4x4& m)
 {
 	return m;
 }
 
-void CPHShell::InterpolateGlobalTransform(Fmatrix* m)
+void CPHShell::InterpolateGlobalTransform(Matrix4x4* m)
 {
 	for (CPHElement* it : elements)
 		it->InterpolateGlobalTransform(&it->mXFORM);
@@ -1022,7 +1022,7 @@ void CPHShell::InterpolateGlobalTransform(Fmatrix* m)
 
 	m->mulB_43(m_object_in_root);
 
-	mXFORM.set(*m);
+	mXFORM = (*m);
 
 	VERIFY2(_valid(*m), "not valide transform");
 
@@ -1036,7 +1036,7 @@ void CPHShell::InterpolateGlobalTransform(Fmatrix* m)
 
 }
 
-void CPHShell::GetGlobalTransformDynamic(Fmatrix* m)
+void CPHShell::GetGlobalTransformDynamic(Matrix4x4* m)
 {
 	for (CPHElement* it : elements)
 		it->GetGlobalTransformDynamic(&it->mXFORM);
@@ -1044,7 +1044,7 @@ void CPHShell::GetGlobalTransformDynamic(Fmatrix* m)
 	m->set((*elements.begin())->mXFORM);
 
 	m->mulB_43(m_object_in_root);
-	mXFORM.set(*m);
+	mXFORM  = (*m);
 
 	VERIFY2(_valid(*m), "not valide transform");
 
@@ -1065,14 +1065,14 @@ void CPHShell::GetGlobalPositionDynamic(Fvector* v)
 	VERIFY2(_valid(*v), "not valide result position");
 }
 
-void CPHShell::ObjectToRootForm(const Fmatrix& form)
+void CPHShell::ObjectToRootForm(const Matrix4x4& form)
 {
-	Fmatrix M;
-	Fmatrix ILF;
+	Matrix4x4 M;
+	Matrix4x4 ILF;
 	(*elements.begin())->InverceLocalForm(ILF);
 	M.mul(m_object_in_root, ILF);
 	M.invert();
-	mXFORM.mul(form, M);
+	mXFORM.Multiply(M, form);
 	VERIFY2(_valid(form), "not valide transform");
 }
 
@@ -1286,7 +1286,7 @@ void CPHShell::setForce(const Fvector& force)
 		it->setForce(force);
 }
 
-void CPHShell::PlaceBindToElFormsRecursive(Fmatrix parent, u16 id, u16 element, Flags64 &mask)
+void CPHShell::PlaceBindToElFormsRecursive(Matrix4x4 parent, u16 id, u16 element, Flags64 &mask)
 {
 	CBoneData& bone_data = m_pKinematics->LL_GetData(u16(id));
 	SJointIKData& joint_data = bone_data.IK_data;
@@ -1302,7 +1302,7 @@ void CPHShell::PlaceBindToElFormsRecursive(Fmatrix parent, u16 id, u16 element, 
 			element++;
 			R_ASSERT2(element<elements.size(), "Out of elements!!");
 			CPHElement* E = (elements[element]);
-			E->mXFORM.mul(parent, bone_data.bind_transform);
+			E->mXFORM.Multiply(bone_data.bind_transform, parent);
 		}
 	}
 
@@ -1317,12 +1317,12 @@ void CPHShell::BonesBindCalculate(u16 id_from)
 	BonesBindCalculateRecursive(Fidentity, 0);
 }
 
-void CPHShell::BonesBindCalculateRecursive(Fmatrix parent, u16 id)
+void CPHShell::BonesBindCalculateRecursive(Matrix4x4 parent, u16 id)
 {
 	CBoneInstance& bone_instance = m_pKinematics->LL_GetBoneInstance(id);
 	CBoneData& bone_data = m_pKinematics->LL_GetData(u16(id));
 
-	bone_instance.mTransform.mul(parent, bone_data.bind_transform);
+	bone_instance.mTransform.Multiply(bone_data.bind_transform, parent);
 
 	IBoneData	&ibone_data = bone_data;
 	u16	num_children = ibone_data.GetNumChildren();

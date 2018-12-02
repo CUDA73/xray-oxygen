@@ -380,7 +380,7 @@ namespace XRay
 				Matrix = DirectX::XMMatrixIdentity();
 			}
 
-			inline void SetHPB(float h, float p, float b);
+			inline void SetHPB(float h, float p, float b);		
 			inline void GetHPB(float &h, float &p, float &b) const
 			{
 				float cy = _sqrt(y[1]*y[1] + x[1]*x[1]);
@@ -399,7 +399,7 @@ namespace XRay
 
 			/// <summary>Multiplication matrix by matrix</summary>
 			inline void Multiply(Matrix4x4 a, Matrix4x4 b) { Matrix = DirectX::XMMatrixMultiply(a, b); }
-
+			/// <summary>Multiplication matrix by matrix 43</summary> // ?
 			inline void Multiply43(Matrix4x4 a, Matrix4x4 b)
 			{
 				Matrix = DirectX::XMMatrixMultiply(a, b);
@@ -408,9 +408,16 @@ namespace XRay
 				z[3] = 0;
 				w[3] = 1;
 			}
+			/// <summary>Multiplication matrix no projection </summary> // ?
+			inline Matrix4x4 MultiplyA_43(const Matrix4x4 A)			
+			{
+				Matrix4x4 B; B = (*this); 	Multiply(B, A);
+				return *this;
+			};
 
 			/// <summary>Inversion matrix by matrix</summary>
 			inline void InvertMatrixByMatrix(const DirectX::XMMATRIX &a);
+			inline bool InvertMatrixByMatrix_b(const DirectX::XMMATRIX &a);
 
 			inline void InvertMatrixByMatrix43(const DirectX::XMMATRIX &a);
 			/// <summary>Call Fbox::xform for DirectX::XMMATRIX</summary>
@@ -511,7 +518,7 @@ namespace XRay
 			};
 
 		public:
-			inline operator const Fmatrix& () const { return CastToGSCMatrix(Matrix); }
+			inline operator const Matrix4x4& () const { return Matrix; }
 			inline operator DirectX::XMMATRIX() { return Matrix; }
 			inline operator DirectX::XMMATRIX() const { return Matrix; }
 			inline void operator= (const DirectX::XMMATRIX &a) { Matrix = a; }
@@ -568,8 +575,8 @@ namespace XRay
 
 		inline void Matrix4x4::BuildXForm(Fbox &B)
 		{
-			const Fmatrix bbox = *this;
-			B.xform(bbox);
+			const Matrix4x4 bbox = *this;
+			B.xform(CastToGSCMatrix(bbox));
 		}
 
 		inline void Matrix4x4::BuildCamDir(const Fvector &vFrom, const Fvector &vView, const Fvector &vWorldUp)
@@ -626,6 +633,43 @@ namespace XRay
 			Matrix.r[3].m128_f32[3] = 1.0f;
 		}
 
+		inline bool Matrix4x4::InvertMatrixByMatrix_b(const DirectX::XMMATRIX &a)
+		{
+			// faster than self-invert
+			float fDetInv = (a.r[0].m128_f32[0] * (a.r[1].m128_f32[1] * a.r[2].m128_f32[2] - a.r[1].m128_f32[2] * a.r[2].m128_f32[1]) -
+				a.r[0].m128_f32[1] * (a.r[1].m128_f32[0] * a.r[2].m128_f32[2] - a.r[1].m128_f32[2] * a.r[2].m128_f32[0]) +
+				a.r[0].m128_f32[2] * (a.r[1].m128_f32[0] * a.r[2].m128_f32[1] - a.r[1].m128_f32[1] * a.r[2].m128_f32[0]));
+
+			if (_abs(fDetInv) <= flt_zero)	return	false;
+			fDetInv = 1.0f / fDetInv;
+
+			Matrix.r[0].m128_f32[0] = fDetInv * (a.r[1].m128_f32[1] * a.r[2].m128_f32[2] - a.r[1].m128_f32[2] * a.r[2].m128_f32[1]);
+			Matrix.r[0].m128_f32[1] = -fDetInv * (a.r[0].m128_f32[1] * a.r[2].m128_f32[2] - a.r[0].m128_f32[2] * a.r[2].m128_f32[1]);
+			Matrix.r[0].m128_f32[2] = fDetInv * (a.r[0].m128_f32[1] * a.r[1].m128_f32[2] - a.r[0].m128_f32[2] * a.r[1].m128_f32[1]);
+			Matrix.r[0].m128_f32[3] = 0.0f;
+
+			Matrix.r[1].m128_f32[0] = -fDetInv * (a.r[1].m128_f32[0] * a.r[2].m128_f32[2] - a.r[1].m128_f32[2] * a.r[2].m128_f32[0]);
+			Matrix.r[1].m128_f32[1] = fDetInv * (a.r[0].m128_f32[0] * a.r[2].m128_f32[2] - a.r[0].m128_f32[2] * a.r[2].m128_f32[0]);
+			Matrix.r[1].m128_f32[2] = -fDetInv * (a.r[0].m128_f32[0] * a.r[1].m128_f32[2] - a.r[0].m128_f32[2] * a.r[1].m128_f32[0]);
+			Matrix.r[1].m128_f32[3] = 0.0f;
+
+			Matrix.r[2].m128_f32[0] = fDetInv * (a.r[1].m128_f32[0] * a.r[2].m128_f32[1] - a.r[1].m128_f32[1] * a.r[2].m128_f32[0]);
+			Matrix.r[2].m128_f32[1] = -fDetInv * (a.r[0].m128_f32[0] * a.r[2].m128_f32[1] - a.r[0].m128_f32[1] * a.r[2].m128_f32[0]);
+			Matrix.r[2].m128_f32[2] = fDetInv * (a.r[0].m128_f32[0] * a.r[1].m128_f32[1] - a.r[0].m128_f32[1] * a.r[1].m128_f32[0]);
+			Matrix.r[2].m128_f32[3] = 0.0f;
+
+			Matrix.r[3].m128_f32[0] = -(a.r[3].m128_f32[0] * Matrix.r[0].m128_f32[0] + a.r[3].m128_f32[1] * Matrix.r[1].m128_f32[0] + a.r[3].m128_f32[2] * Matrix.r[2].m128_f32[0]);
+			Matrix.r[3].m128_f32[1] = -(a.r[3].m128_f32[0] * Matrix.r[0].m128_f32[1] + a.r[3].m128_f32[1] * Matrix.r[1].m128_f32[1] + a.r[3].m128_f32[2] * Matrix.r[2].m128_f32[1]);
+			Matrix.r[3].m128_f32[2] = -(a.r[3].m128_f32[0] * Matrix.r[0].m128_f32[2] + a.r[3].m128_f32[1] * Matrix.r[1].m128_f32[2] + a.r[3].m128_f32[2] * Matrix.r[2].m128_f32[2]);
+			Matrix.r[3].m128_f32[3] = 1.0f;
+
+			return true;
+		}
+
+
+		
+		
+
 		inline void Matrix4x4::InvertMatrixByMatrix43(const DirectX::XMMATRIX &a)
 		{
 			InvertMatrixByMatrix(a);
@@ -650,6 +694,7 @@ namespace XRay
 			z = { -_cp * _sh, _sp, _cp*_ch,  0 };
 			w = { 0, 0, 0, 1 };
 		}
+		
 
 	}
 };

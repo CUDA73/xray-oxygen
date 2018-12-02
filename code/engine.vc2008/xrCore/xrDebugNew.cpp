@@ -116,7 +116,7 @@ void xrDebug::do_exit(HWND hWnd, const xr_string &message)
 
 	if (MessageBoxA(nullptr, (message + "\n Do you want to interrupt the game?").c_str(), "X-Ray Error", MB_YESNO | MB_TOPMOST) == IDYES)
 	{
-		DEBUG_INVOKE;
+					DEBUG_INVOKE;
         ExitProcess(1);
 	}
 #ifdef AWDA

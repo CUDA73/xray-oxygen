@@ -66,11 +66,11 @@ public:
 
     IC void w_vec3(const Fvector& a) {
         w(&a, 3 * sizeof(float));
-    } // vec3
+    } // vec3	
 
     IC void w_vec4(const Fvector4& a) {
         w(&a, 4 * sizeof(float));
-    } // vec4
+    } // vec4	
 
     IC void w_u64(const u64 a) {
         w(&a, sizeof(u64));

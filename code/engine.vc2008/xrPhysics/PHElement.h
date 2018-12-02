@@ -153,7 +153,7 @@ public:																																				//
 	void						ToBonePos(const CBoneInstance* B, motion_history_state history_state);
 	void						ToBonePos(const Matrix4x4 &BoneTransform, motion_history_state history_state);
 	inline		void			ActivatingPos(const Fmatrix &BoneTransform);
-	inline		void			CalculateBoneTransform(Matrix4x &bone_transform)const;
+	inline		void			CalculateBoneTransform(Matrix4x4 &bone_transform)const;
 
 	virtual void						dbg_draw_velocity(float scale, u32 color);
 	virtual void						dbg_draw_force(float scale, u32 color);

@@ -82,7 +82,7 @@ void CObject::cNameVisual_set	(shared_str N)
 		NameVisual				= N;
 		renderable.visual		= Render->model_Create	(*N);
 		
-		IKinematics* old_k	= old_v?old_v->dcast_PKinematics():NULL;
+		IKinematics* old_k	= old_v?old_v->dcast_PKinematics():nullptr;
 		IKinematics* new_k	= renderable.visual->dcast_PKinematics();
 
 		if(old_k && new_k)
@@ -96,7 +96,7 @@ void CObject::cNameVisual_set	(shared_str N)
 	else 
 	{
 		::Render->model_Delete	(renderable.visual);
-		NameVisual				= 0;
+		NameVisual				= nullptr;
 	}
 	OnChangeVisual				();
 }
@@ -151,11 +151,11 @@ CObject::CObject		( )		:
 	// Transform
 	Props.storage				= 0;
 
-	Parent						= NULL;
+	Parent						= nullptr;
 
-	NameObject					= NULL;
-	NameSection					= NULL;
-	NameVisual					= NULL;
+	NameObject					= nullptr;
+	NameSection					= nullptr;
+	NameVisual					= nullptr;
 #ifdef LUACP_API
 	static bool _saved 			= false;
 	
@@ -176,9 +176,9 @@ CObject::CObject		( )		:
 
 CObject::~CObject				( )
 {
-	cNameVisual_set				( 0 );
-	cName_set					( 0 );
-	cNameSect_set				( 0 );
+	cNameVisual_set				( nullptr );
+	cName_set					( nullptr );
+	cNameSect_set				( nullptr );
 }
 
 void CObject::Load				(LPCSTR section )
@@ -207,10 +207,10 @@ BOOL CObject::net_Spawn			(CSE_Abstract* data)
 
 	VERIFY						(_valid(renderable.xform));
 
-	if (0==Visual() && pSettings->line_exist( cNameSect(), "visual" ) )
+	if (nullptr==Visual() && pSettings->line_exist( cNameSect(), "visual" ) )
 		cNameVisual_set			(pSettings->r_string( cNameSect(), "visual" ) );
 
-	if (0==collidable.model) 	{
+	if (nullptr==collidable.model) 	{
 		if (pSettings->line_exist(cNameSect(),"cform")) {
 			VERIFY3				(*NameVisual, "Model isn't assigned for object, but cform requisted",*cName());
 			collidable.model	= xr_new<CCF_Skeleton>	(this);
@@ -242,7 +242,7 @@ void CObject::net_Destroy		()
 	spatial_unregister			();
 //	setDestroy					(true);
 	// remove visual
-	cNameVisual_set				( 0 );
+	cNameVisual_set				( nullptr );
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -381,12 +381,12 @@ CObject* CObject::H_SetParent	(CObject* new_parent, bool just_before_destroy)
 	VERIFY2((new_parent==0)||(old_parent==0),"Before set parent - execute H_SetParent(0)");
 
 	// if (Parent) Parent->H_ChildRemove	(this);
-	if (0==old_parent)	OnH_B_Chield		();	// before attach
+	if (nullptr==old_parent)	OnH_B_Chield		();	// before attach
 	else				OnH_B_Independent	(just_before_destroy); // before detach
 	if (new_parent)		spatial_unregister	();
 	else				spatial_register	();
 	Parent				= new_parent;
-	if (0==old_parent)	OnH_A_Chield		();	// after attach
+	if (nullptr==old_parent)	OnH_A_Chield		();	// after attach
 	else				OnH_A_Independent	(); // after detach
 	// if (Parent)	Parent->H_ChildAdd		(this);
 	MakeMeCrow			();
@@ -436,20 +436,20 @@ Fvector CObject::get_last_local_point_on_mesh	( Fvector const& local_point, u16 
 
 	Fvector				result;
 	// Fetch data
-	Fmatrix				mE;
-	const Fmatrix&		M = XFORM();
+	Matrix4x4				mE;
+	const Matrix4x4&		M = XFORM();
 	const Fbox&			B = CFORM()->getBBox();
 
 	// Build OBB + Ellipse and X-form point
 	Fvector				c,r;
-	Fmatrix				T,mR,mS;
+	Matrix4x4			T,mR,mS;
 	B.getcenter			(c);
 	B.getradius			(r);
-	T.translate			(c);
-	mR.mul_43			(M,T);
-	mS.scale			(r);
-	mE.mul_43			(mR,mS); 
-	mE.transform_tiny	(result,local_point);
+	T.Translate			(c);
+	mR.Multiply43		(T,M);
+	mS.Scale			(r.x, r.y, r.z);
+	mE.Multiply43		(mS, mR);
+	mE.TransformTiny	(result,local_point);
 
 	return				result;
 }

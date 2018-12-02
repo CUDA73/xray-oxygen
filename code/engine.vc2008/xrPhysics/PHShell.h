@@ -79,10 +79,10 @@ public:
 
 	virtual void Update();
 
-	virtual void Activate(const Fmatrix& m0, float dt01, const Fmatrix& m2, bool disable = false);
-	virtual void Activate(const Fmatrix &transform, const Fvector& lin_vel, const Fvector& ang_vel, bool disable = false);
+	virtual void Activate(const Matrix4x4& m0, float dt01, const Matrix4x4& m2, bool disable = false);
+	virtual void Activate(const Matrix4x4 &transform, const Fvector& lin_vel, const Fvector& ang_vel, bool disable = false);
 	virtual void Activate(bool disable = false, bool not_set_bone_callbacks = false);
-	virtual void Activate(const Fmatrix& start_from, bool disable = false) {};
+	virtual void Activate(const Matrix4x4& start_from, bool disable = false) {};
 
 	virtual	CPhysicsShellAnimator*	PPhysicsShellAnimator() { return	m_pPhysicsShellAnimatorC; };
 
@@ -169,8 +169,8 @@ public:
 	virtual	 void get_AngularVel(Fvector& velocity) const;
 	virtual	 void set_LinearVel(const Fvector& velocity);
 	virtual	 void set_AngularVel(const Fvector& velocity);
-	virtual  void TransformPosition(const Fmatrix &form, motion_history_state history_state);
-	virtual	 void SetGlTransformDynamic(const Fmatrix &form);
+	virtual  void TransformPosition(const Matrix4x4 &form, motion_history_state history_state);
+	virtual	 void SetGlTransformDynamic(const Matrix4x4 &form);
 	virtual	 void set_ApplyByGravity(bool flag);
 	virtual	 bool get_ApplyByGravity();
 	virtual	 void SetMaterial(u16 m);
@@ -205,7 +205,7 @@ public:
 	virtual bool isFullActive()const { return isActive() && !m_flags.test(flActivating); }
 
 	void SetNotActivating() { m_flags.set(flActivating, FALSE); }
-	inline void SetObjVsShellTransform(const Fmatrix & root_transform);
+	inline void SetObjVsShellTransform(const Matrix4x4 & root_transform);
 
 	//CPHObject
 	virtual void vis_update_activate();
@@ -223,7 +223,7 @@ public:
 	virtual void NetInterpolationModeOFF() { CPHObject::NetInterpolationOFF(); }
 	virtual void StepFrameUpdate(dReal step) {};
 	virtual CPHMoveStorage*		MoveStorage() { return &m_traced_geoms; }
-	virtual void build_FromKinematics(IKinematics* K, BONE_P_MAP* p_geting_map = NULL);
+	virtual void build_FromKinematics(IKinematics* K, BONE_P_MAP* p_geting_map = nullptr);
 	virtual void preBuild_FromKinematics(IKinematics* K, BONE_P_MAP* p_geting_map);
 	virtual void	__stdcall		ActivatingBonePoses(IKinematics &K);
 	virtual void ZeroCallbacks();
@@ -236,15 +236,15 @@ public:
 	virtual void set_DisableParams(const SAllDDOParams& params);
 	virtual void UpdateRoot();
 	virtual void SmoothElementsInertia(float k);
-	virtual void	__stdcall		InterpolateGlobalTransform(Fmatrix* m);
+	virtual void	__stdcall		InterpolateGlobalTransform(Matrix4x4* m);
 	virtual void InterpolateGlobalPosition(Fvector* v);
 	virtual void AnimatorOnFrame();
-	virtual void GetGlobalTransformDynamic(Fmatrix* m);
+	virtual void GetGlobalTransformDynamic(Matrix4x4* m);
 	virtual void GetGlobalPositionDynamic(Fvector* v);
 	virtual Matrix4x4& ObjectInRoot() { return m_object_in_root; }
-	virtual void ObjectToRootForm(const Fmatrix& form);
+	virtual void ObjectToRootForm(const Matrix4x4& form);
 	virtual dSpaceID dSpace() { return m_space; }
-	virtual void SetTransform(const Fmatrix& m0, motion_history_state history_state);
+	virtual void SetTransform(const Matrix4x4& m0, motion_history_state history_state);
 
 	virtual void AddTracedGeom(u16 element = 0, u16 geom = 0);
 	virtual void SetAllGeomTraced();
@@ -279,10 +279,10 @@ private:
 	void AddSplitter(CPHShellSplitter::EType type, u16 element, u16 joint);
 	void AddSplitter(CPHShellSplitter::EType type, u16 element, u16 joint, u16 position);
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	void AddElementRecursive(IPhysicsElementEx* root_e, u16 id, Fmatrix global_parent, u16 element_number, bool *vis_check);
-	void PlaceBindToElFormsRecursive(Fmatrix parent, u16 id, u16 element, Flags64 &mask);
+	void AddElementRecursive(IPhysicsElementEx* root_e, u16 id, Matrix4x4 global_parent, u16 element_number, bool *vis_check);
+	void PlaceBindToElFormsRecursive(Matrix4x4 parent, u16 id, u16 element, Flags64 &mask);
 	void BonesBindCalculate(u16 id_from = 0);
-	void BonesBindCalculateRecursive(Fmatrix parent, u16 id);
+	void BonesBindCalculateRecursive(Matrix4x4 parent, u16 id);
 	void ZeroCallbacksRecursive(u16 id);
 	void SetCallbacksRecursive(u16 id, u16 element);
 	void ResetCallbacksRecursive(u16 id, u16 element, Flags64 &mask);
@@ -290,7 +290,7 @@ private:
 	void ReanableObject();
 	void ExplosionHit(const Fvector& pos, const Fvector& dir, float val, const u16 id);
 	void ClearBreakInfo();
-	Fmatrix& get_animation_root_matrix(Fmatrix& m);
+	Matrix4x4& get_animation_root_matrix(Matrix4x4& m);
 	void update_root_transforms();
 	inline CPHElement &root_element() { VERIFY(!elements.empty()); return *(*elements.begin()); }
 
@@ -303,10 +303,10 @@ public:
 	virtual void dbg_draw_geometry(float scale, u32 color, Flags32 flags = Flags32().assign(0)) const;
 };
 
-inline	void CPHShell::SetObjVsShellTransform(const Fmatrix & root_transform)
+inline	void CPHShell::SetObjVsShellTransform(const Matrix4x4 & root_transform)
 {
-	m_object_in_root.set(root_transform);
-	m_object_in_root.invert();
+	m_object_in_root = (root_transform);
+	m_object_in_root.InvertMatrixByMatrix(root_transform);
 	SetNotActivating();
 }
 

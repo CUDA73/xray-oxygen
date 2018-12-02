@@ -62,11 +62,11 @@ void	animation_movement_controller::GetInitalPositionBlenSpeed()
 {
 	float sv_blend_time = m_control_blend->timeCurrent;
 
-	Fmatrix m1;
+	Matrix4x4 m1;
 	animation_root_position(m1);
 	m_control_blend->timeCurrent += Device.fTimeDelta;
 	clamp(m_control_blend->timeCurrent, 0.f, m_control_blend->timeTotal);
-	Fmatrix m0;
+	Matrix4x4 m0;
 	animation_root_position(m0);
 	float l, a;
 	get_diff_value(m0, m1, l, a);
@@ -81,14 +81,14 @@ bool	animation_movement_controller::IsBlending() const
 }
 float blend_linear_accel = 1.f;
 float blend_angular_accel = 1.f;
-void animation_movement_controller::InitalPositionBlending(const Fmatrix &to)
+void animation_movement_controller::InitalPositionBlending(const Matrix4x4 &to)
 {
 	if (!m_poses_blending.target_reached(m_control_blend->timeCurrent))
 		m_poses_blending.pose(m_pObjXForm, m_control_blend->timeCurrent);
 	else
-		m_pObjXForm.set(to);
+		m_pObjXForm = (to);
 }
-static void get_animation_root_position(Fmatrix &pos, IKinematics* K, IKinematicsAnimated* KA, CBlend *control_blend)
+static void get_animation_root_position(Matrix4x4 &pos, IKinematics* K, IKinematicsAnimated* KA, CBlend *control_blend)
 {
 	VERIFY(KA);
 	VERIFY(K);
@@ -118,7 +118,7 @@ static void get_animation_root_position(Fmatrix &pos, IKinematics* K, IKinematic
 	CBoneInstance BI = K->LL_GetBoneInstance(0);
 
 	KA->LL_BoneMatrixBuild(BI, (Matrix4x4*)&Fidentity, keys);
-	pos.set(BI.mTransform);
+	pos = (BI.mTransform);
 	control_blend->blendAmount = sv_amount;
 }
 

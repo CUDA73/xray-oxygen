@@ -15,6 +15,7 @@
 #include "xrPhysics.h"
 #include "../xrCore/xrapi.h"
 #include "../xrGame/xrGame.h"
+#include "../xrEngine/DirectXMathExternal.h"
 
 #include "d3d9types.h"
 

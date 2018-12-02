@@ -1,4 +1,7 @@
 #pragma once
+
+#include "../xrEngine/DirectXMathExternal.h"
+
 XRCORE_API xr_string get_string(bool v);
 XRCORE_API xr_string get_string(const Fvector& v);
 XRCORE_API xr_string get_string(const Fmatrix& dop);

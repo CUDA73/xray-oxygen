@@ -2,7 +2,7 @@
 #define __XR_COLLIDE_FORM_H__
 
 #include "../xrcdb/xr_collide_defs.h"
-
+#include "../xrEngine/DirectXMathExternal.h"
 // refs
 class ENGINE_API	CObject;
 class ENGINE_API	CInifile;

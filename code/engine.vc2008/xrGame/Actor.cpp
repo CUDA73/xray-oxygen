@@ -1188,17 +1188,17 @@ void CActor::RenderText				(LPCSTR Text, Fvector dpos, float* pdup, u32 color)
 	if (!g_Alive()) return;
 	
 	CBoneInstance& BI = smart_cast<IKinematics*>(Visual())->LL_GetBoneInstance(u16(m_head));
-	Fmatrix M;
+	Matrix4x4 M;
 	smart_cast<IKinematics*>(Visual())->CalculateBones	();
-	M.mul(XFORM(),BI.mTransform);
+	M.Multiply(BI.mTransform, XFORM());
 	//------------------------------------------------
 	Fvector v0, v1;
-	v0.set(M.c); v1.set(M.c);
+	v0 = (M.c); v1 = (M.c);
 	Fvector T        = Device.vCameraTop;
 	v1.add(T);
 
 	Fvector v0r, v1r;
-	Fmatrix &mTransform = CastToGSCMatrix(Device.mFullTransform);
+	Matrix4x4 &mTransform = CastToGSCMatrix(Device.mFullTransform);
 
 	mTransform.transform(v0r,v0);
 	mTransform.transform(v1r,v1);

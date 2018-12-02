@@ -6,9 +6,11 @@
 #pragma comment (lib, "PowrProf.lib")
 #include <mmsystem.h>
 
+#include "../xrEngine/DirectXMathExternal.h"
+
 // Initialized on startup
 XRCORE_API Fmatrix Fidentity;
-XRCORE_API Dmatrix Didentity;
+XRCORE_API DMatrix Didentity;
 XRCORE_API CRandom Random;
 
 typedef struct _PROCESSOR_POWER_INFORMATION
@@ -296,7 +298,7 @@ float* processor_info::MTCPULoad()
 		8,
 		perfomanceInfo,
 		sizeof(SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION) * (ULONG)m_dwNumberOfProcessors,
-		NULL
+		nullptr
 	)))
 	{
 		Msg("Can't get NtQuerySystemInformation");
@@ -336,7 +338,7 @@ float processor_info::CalcMPCPULoad(DWORD dwCPU)
 
 		SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION info[MAX_CPU];
 
-		if (SUCCEEDED(m_pNtQuerySystemInformation(SystemProcessorPerformanceInformation, &info, sizeof(info), NULL)))
+		if (SUCCEEDED(m_pNtQuerySystemInformation(SystemProcessorPerformanceInformation, &info, sizeof(info), nullptr)))
 			//query CPU usage
 		{
 			if (m_idleTime[dwCPU].QuadPart)

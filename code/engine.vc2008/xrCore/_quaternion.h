@@ -337,8 +337,8 @@ public:
     }
 };
 
-typedef _quaternion<float> Fquaternion;
-typedef _quaternion<double> Dquaternion;
+using Fquaternion = _quaternion<float>;
+using Dquaternion = _quaternion<double>;
 
 template struct XRCORE_API _quaternion<float>;
 template struct XRCORE_API _quaternion<double>;

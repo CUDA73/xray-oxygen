@@ -39,9 +39,9 @@ void CCF_Skeleton::SElement::center(Fvector& center) const
 {
 	switch (type){
 	case SBoneShape::stBox:
-		center.set(	-b_IM.c.dotproduct(b_IM.i),
-					-b_IM.c.dotproduct(b_IM.j),
-					-b_IM.c.dotproduct(b_IM.k));
+		center.set(	-b_IM.dotproduct(b_IM.i),
+					-b_IM.dotproduct(b_IM.j),
+					-b_IM.dotproduct(b_IM.k));
 	break;
 	case SBoneShape::stSphere: 
 		center.set(s_sphere.P);
@@ -137,7 +137,7 @@ void CCF_Skeleton::BuildState()
 	for (auto I=elements.begin(); I!=elements.end(); I++){
 		if (!I->valid())		continue;
 		SBoneShape&	shape		= K->LL_GetData(I->elem_id).shape;
-		Fmatrix					ME,T,TW;
+		Matrix4x4					ME,T,TW;
 		const Matrix4x4& Mbone	= K->LL_GetTransform(I->elem_id);
 
 		VERIFY_FORMAT( DET(Mbone)>EPS, "0 scale bone matrix, %d %s\n", I->elem_id, dbg_object_full_dump_string( owner ).c_str() );
@@ -145,18 +145,18 @@ void CCF_Skeleton::BuildState()
 		switch (I->type){
 			case SBoneShape::stBox:{
 				const Fobb& B		= shape.box;
-				B.xform_get			(ME			);
+				B.xform_get			(ME);
 
 				I->b_hsize.set		(B.m_halfsize);
 				// prepare matrix World to Element
-				T.mul_43					(Mbone,ME	);		// model space
-				TW.mul_43					(L2W,T		);		// world space
-				bool b						= I->b_IM.invert_b	(TW);
+				T.Multiply43				(ME, Mbone);		// model space
+				TW.Multiply43				(T, L2W);		// world space
+				bool b						= I->b_IM.InvertMatrixByMatrix(TW);
 				// check matrix validity
 				if (!b)
 				{
 					Msg						("* ERROR: invalid bone xform . Bone disabled.");
-					Msg						("* ERROR: bone_id=[%d], world_pos[%f,%f,%f]",I->elem_id,VPUSH(TW.c));
+					Msg						("* ERROR: bone_id=[%d], world_pos[%f,%f,%f]",I->elem_id,VPUSH(TW));
 					Msg						("* MSG: visual name %s",owner->cNameVisual().c_str());
 					Msg						("* MSG: object name %s",owner->cName().c_str());
 					I->elem_id				= u16(-1);				//. hack - disable invalid bone

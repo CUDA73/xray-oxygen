@@ -151,9 +151,10 @@ public:
 	};
 	IC	SelfRef	invert		( const Self &a )	{		// important: this is 4x3 invert, not the 4x4 one
 		// faster than self-invert
-		T fDetInv = ( a._11 * ( a._22 * a._33 - a._23 * a._32 ) -
-			a._12 * ( a._21 * a._33 - a._23 * a._31 ) +
-			a._13 * ( a._21 * a._32 - a._22 * a._31 ) );
+		T fDetInv =
+			( a._11 * ( a._22 * a._33 - a._23 * a._32 ) -
+			  a._12 * ( a._21 * a._33 - a._23 * a._31 ) +
+			  a._13 * ( a._21 * a._32 - a._22 * a._31 ) );
 
 		VERIFY(_abs(fDetInv)>flt_zero);
 		fDetInv=1.0f/fDetInv;
@@ -598,7 +599,7 @@ public:
 };
 
 typedef		_matrix<float>	Fmatrix;
-typedef		_matrix<double>	Dmatrix;
+typedef		_matrix<double>	DMatrix;
 
 template <class T>
 BOOL	_valid			(const _matrix<T>& m)		
@@ -611,7 +612,7 @@ BOOL	_valid			(const _matrix<T>& m)
 		;
 }
 
-extern XRCORE_API Fmatrix	Fidentity;
-extern XRCORE_API Dmatrix	Didentity;
+extern XRCORE_API Fmatrix		Fidentity;
+extern XRCORE_API DMatrix		Didentity;
 
 #endif

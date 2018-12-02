@@ -6,7 +6,7 @@ class IPhysicsGeometry;
 class	IPhysicsElement
 {
 public:
-	virtual	const	Fmatrix			&XFORM				()							const			= 0;
+	virtual	const	Matrix4x4			&XFORM				()							const			= 0;
 	virtual			void			get_LinearVel		( Fvector& velocity )		const			= 0;
 	virtual			void			get_AngularVel		( Fvector& velocity )		const			= 0;
 	virtual			void			get_Box				( Fvector&	sz, Fvector& c )const			= 0;
@@ -18,7 +18,7 @@ public:
 class	IPhysicsShell
 {
 public:
-	virtual	const	Fmatrix				&XFORM				()				const	= 0;
+	virtual	const	Matrix4x4				&XFORM				()				const	= 0;
 	virtual	const	IPhysicsElement		&Element			( u16 index )	const	= 0;
 	virtual			u16					get_ElementsNumber	( )				const	= 0;
 };
